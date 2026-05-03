@@ -16,7 +16,7 @@ export function StampCard({
   const remaining = Math.max(0, goal - count);
 
   return (
-    <div
+    <div   
       className={cn(
         "rounded-3xl p-5 shadow-card border border-border bg-card relative overflow-hidden",
         compact && "p-4"
