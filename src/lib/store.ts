@@ -1,78 +1,37 @@
-// Lightweight reactive localStorage store for loyalty state
-import { useSyncExternalStore } from "react";
+// lib/store.ts
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { User } from "@/types";
 
-type RedeemedReward = { rewardId: string; redeemedAt: number };
-
-export type LoyaltyState = {
-  user: { name: string; onboarded: boolean };
-  scans: Record<string, number>; // restaurantId -> stamp count
-  redeemed: Record<string, RedeemedReward[]>; // restaurantId -> redeemed rewards
-  visitedAt: Record<string, number>; // restaurantId -> last visit
-};
-
-const STORAGE_KEY = "stamp.loyalty.v1";
-
-const defaultState: LoyaltyState = {
-  user: { name: "", onboarded: false },
-  scans: {},
-  redeemed: {},
-  visitedAt: {},
-};
-
-let state: LoyaltyState = load();
-const listeners = new Set<() => void>();
-
-function load(): LoyaltyState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState;
-    return { ...defaultState, ...JSON.parse(raw) };
-  } catch {
-    return defaultState;
-  }
+interface UserState {
+  user: User;
+  hasHydrated: boolean;
+  setUser: (user: User) => void;
+  setOnboarded: (value: boolean) => void;
+  setHasHydrated: (value: boolean) => void;
 }
 
-function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-}
-
-function setState(updater: (s: LoyaltyState) => LoyaltyState) {
-  state = updater(state);
-  save();
-  listeners.forEach((l) => l());
-}
-
-export const loyaltyStore = {
-  getState: () => state,
-  subscribe: (l: () => void) => {
-    listeners.add(l);
-    return () => listeners.delete(l);
-  },
-  completeOnboarding: (name: string) =>
-    setState((s) => ({ ...s, user: { name: name || "Guest", onboarded: true } })),
-  reset: () => setState(() => defaultState),
-  addScan: (restaurantId: string) =>
-    setState((s) => ({
-      ...s,
-      scans: { ...s.scans, [restaurantId]: (s.scans[restaurantId] || 0) + 1 },
-      visitedAt: { ...s.visitedAt, [restaurantId]: Date.now() },
-    })),
-  redeem: (restaurantId: string, rewardId: string, stampsRequired: number) =>
-    setState((s) => {
-      const current = s.scans[restaurantId] || 0;
-      if (current < stampsRequired) return s;
-      const list = s.redeemed[restaurantId] || [];
-      return {
-        ...s,
-        scans: { ...s.scans, [restaurantId]: current - stampsRequired },
-        redeemed: {
-          ...s.redeemed,
-          [restaurantId]: [...list, { rewardId, redeemedAt: Date.now() }],
-        },
-      };
+export const loyaltyStore = create<UserState>()(
+  persist(
+    (set) => ({
+      user: {
+        id: "",
+        name: "",
+        role: "customer",
+        loyalTo: [],
+        onboarded: false,
+      },
+      hasHydrated: false,
+      setUser: (user) => set({ user }),
+      setOnboarded: (onboarded) =>
+        set((state) => ({ user: { ...state.user, onboarded } })),
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
-};
-
-export function useLoyalty(): LoyaltyState {
-  return useSyncExternalStore(loyaltyStore.subscribe, loyaltyStore.getState, loyaltyStore.getState);
-}
+    {
+      name: "loyalty-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
+  )
+);

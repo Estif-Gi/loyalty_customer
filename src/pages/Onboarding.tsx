@@ -1,24 +1,74 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { loyaltyStore, useLoyalty } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrCode, Sparkles, Bell } from "lucide-react";
+import { toast } from "sonner";
+import { loyaltyStore } from "@/lib/store";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const state = useLoyalty();
-  const [step, setStep] = useState(state.user.onboarded ? 99 : 0);
+  // If token exists, skip onboarding
+  const hasToken = !!localStorage.getItem("token");
+  const [step, setStep] = useState(hasToken ? 99 : 0);
+  const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (step === 99) {
     navigate("/home", { replace: true });
     return null;
   }
 
-  const finish = () => {
-    loyaltyStore.completeOnboarding(name);
-    navigate("/home", { replace: true });
+  const handleAuth = async () => {
+    if (!phone || !password || (!isLogin && !name)) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const response = await fetch(`${API_BASE_URL}/users/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, password }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.message || "Login failed");
+
+        localStorage.setItem("token", data.token);
+        if (data.user) {
+          loyaltyStore.getState().setUser(data.user);
+          loyaltyStore.getState().setOnboarded(true);
+        }
+        toast.success("Welcome back!");
+      } else {
+        const response = await fetch(`${API_BASE_URL}/users/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, phone, password, role: "customer" }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.message || "Registration failed");
+
+        localStorage.setItem("token", data.token);
+        if (data.user) {
+          loyaltyStore.getState().setUser(data.user);
+          loyaltyStore.getState().setOnboarded(true);
+        }
+        toast.success("Account created successfully!");
+      }
+      navigate("/home", { replace: true });
+    } catch (err: any) {
+      toast.error(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,20 +96,59 @@ export default function Onboarding() {
 
         {step === 1 && (
           <div className="animate-fade-in-up max-w-sm w-full">
-            <h2 className="font-display text-5xl mb-3 leading-none">What's your name?</h2>
-            <p className="text-muted-foreground mb-8">Optional. Skip to stay anonymous.</p>
-            <Input
-              autoFocus
-              placeholder="e.g. Alex"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-14 rounded-2xl text-center text-lg mb-4"
-              onKeyDown={(e) => e.key === "Enter" && finish()}
-            />
-            <Button size="lg" className="w-full h-14 rounded-2xl text-base font-semibold tap-scale" onClick={finish}>
-              {name.trim() ? "Continue" : "Continue as Guest"}
+            <h2 className="font-display text-4xl mb-3 leading-none">
+              {isLogin ? "Welcome Back" : "Create Account"}
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              {isLogin ? "Log in to view your stamps." : "Sign up to start earning rewards."}
+            </p>
+            
+            <div className="space-y-4 mb-6">
+              {!isLogin && (
+                <Input
+                  placeholder="Your Name (e.g. Alex)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-14 rounded-2xl text-lg"
+                />
+              )}
+              <Input
+                placeholder="Phone Number"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="h-14 rounded-2xl text-lg"
+              />
+              <Input
+                placeholder="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-14 rounded-2xl text-lg"
+                onKeyDown={(e) => e.key === "Enter" && handleAuth()}
+              />
+            </div>
+
+            <Button 
+              size="lg" 
+              className="w-full h-14 rounded-2xl text-base font-semibold tap-scale" 
+              onClick={handleAuth}
+              disabled={loading}
+            >
+              {loading ? "Please wait..." : isLogin ? "Log In" : "Sign Up"}
             </Button>
-            <button onClick={() => setStep(0)} className="text-muted-foreground text-sm mt-4 underline-offset-4 hover:underline">
+            
+            <button 
+              onClick={() => setIsLogin(!isLogin)} 
+              className="text-muted-foreground text-sm mt-4 underline-offset-4 hover:underline"
+            >
+              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+            </button>
+            <br />
+            <button 
+              onClick={() => setStep(0)} 
+              className="text-muted-foreground text-sm mt-4 underline-offset-4 hover:underline"
+            >
               Back
             </button>
           </div>
@@ -82,3 +171,4 @@ function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; 
     </div>
   );
 }
+

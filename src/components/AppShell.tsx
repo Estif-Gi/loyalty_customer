@@ -8,7 +8,7 @@ export function AppShell() {
   return (
     <div className="min-h-dvh gradient-warm flex flex-col">
       <main className="flex-1 mx-auto w-full max-w-md pb-28">
-        <div key={location.pathname} className="animate-fade-in-up">
+        <div key={location.pathname} className={location.pathname === "/scan" ? "h-full" : "animate-fade-in-up"}>
           <Outlet />
         </div>
       </main>

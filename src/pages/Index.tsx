@@ -1,13 +1,12 @@
 // Splash route — redirects based on onboarding state.
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { loyaltyStore } from "@/lib/store";
 
 const Index = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    const onboarded = loyaltyStore.getState().user.onboarded;
-    navigate(onboarded ? "/home" : "/onboarding", { replace: true });
+    const token = localStorage.getItem("token");
+    navigate(token ? "/home" : "/onboarding", { replace: true });
   }, [navigate]);
 
   return (

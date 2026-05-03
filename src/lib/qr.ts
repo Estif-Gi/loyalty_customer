@@ -1,5 +1,3 @@
-import { RESTAURANTS } from "./mockData";
-
 export type QRPayload =
   | { kind: "loyalty"; restaurantId: string }
   | { kind: "menu"; restaurantId: string }
@@ -28,14 +26,12 @@ export function parseQR(text: string): QRPayload {
     }
   } catch {}
 
-  // Plain id fallback → loyalty
-  const known = RESTAURANTS.find((r) => r.id === trimmed);
-  if (known) return { kind: "loyalty", restaurantId: known.id };
+  // Assume plain string might be a mongodb ID or generic ID fallback to loyalty
+  if (/^[a-f\d]{24}$/i.test(trimmed)) {
+    return { kind: "loyalty", restaurantId: trimmed };
+  }
 
   return { kind: "unknown", raw: trimmed };
 }
 
-export const DEMO_CODES = RESTAURANTS.flatMap((r) => [
-  { label: `${r.emoji} ${r.name} — Stamp`, code: `stamp://loyalty/${r.id}` },
-  { label: `${r.emoji} ${r.name} — Menu`, code: `stamp://menu/${r.id}` },
-]);
+export const DEMO_CODES: Array<{ label: string; code: string }> = [];

@@ -1,30 +1,99 @@
 import { useNavigate } from "react-router-dom";
-import { useLoyalty } from "@/lib/store";
-import { RESTAURANTS } from "@/lib/mockData";
-import { Gift, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { Gift, Sparkles, MapPin } from "lucide-react";
+import { loyaltyStore } from "@/lib/store";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+type Reward = {
+  stampsRequired: number;
+  rewardDescription: string;
+  _id: string;
+};
+
+type LoyaltyProgram = {
+  _id: string;
+  rewards: Reward[];
+  // ... other fields
+};
+
+type RestaurantResponse = {
+  themeColor: string;
+  name: string;
+  location: string;
+  programs: LoyaltyProgram[];
+};
 
 export default function Rewards() {
-  const state = useLoyalty();
   const navigate = useNavigate();
 
-  type Item = { restaurantId: string; rewardId: string; title: string; stampsRequired: number; ready: boolean; remaining: number };
-  const all: Item[] = RESTAURANTS.flatMap((r) => {
-    const c = state.scans[r.id] || 0;
-    return r.rewards.map((rw) => ({
-      restaurantId: r.id,
-      rewardId: rw.id,
-      title: rw.title,
-      stampsRequired: rw.stampsRequired,
-      ready: c >= rw.stampsRequired,
-      remaining: Math.max(0, rw.stampsRequired - c),
-    }));
+  const profile = loyaltyStore((state) => state.user);
+  const loyalTo = profile?.loyalTo || [];
+  const token = localStorage.getItem("token");
+
+  const { data: inProgress = [], isLoading, error } = useQuery({
+    queryKey: ["rewards-by-loyalty", loyalTo.map((l: any) => `${l.resID}:${l.stamps}`)],
+    enabled: loyalTo.length > 0,
+    queryFn: async () => {
+      const results = await Promise.all(
+        loyalTo.map(async (l: any) => {
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/loyalty/restaurant/${l.resID}`,
+              {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`Failed to load rewards for ${l.resName || "restaurant"}`);
+            }
+
+            const payload: RestaurantResponse = await response.json();
+
+            // Extract top-level restaurant info
+            const restaurantName = payload.name || l.resName || "Unknown Spot";
+            const themeColor = payload.themeColor || "#f59e0b"; // fallback
+            const location = payload.location;
+
+            // Get the first loyalty program (most APIs return only one)
+            const program = payload.programs?.[0];
+            if (!program || !program.rewards?.length) return null;
+
+            const rewards = [...program.rewards].sort(
+              (a, b) => a.stampsRequired - b.stampsRequired
+            );
+
+            const userStamps = l.stamps || 0;
+
+            // Find the next reward the user is working toward
+            const nextReward =
+              rewards.find((r) => r.stampsRequired >= userStamps) ||
+              rewards[rewards.length - 1];
+
+            return {
+              restaurantId: l.resID,
+              restaurantName,
+              themeColor,
+              location,
+              stamps: userStamps,
+              stampsRequired: nextReward.stampsRequired,
+              rewardDescription: nextReward.rewardDescription || "Reward",
+              remaining: Math.max(0, nextReward.stampsRequired - userStamps),
+              rewardId: nextReward._id,
+            };
+          } catch (err) {
+            console.error(`Error fetching restaurant ${l.resID}:`, err);
+            return null;
+          }
+        })
+      );
+
+      return results.filter(Boolean);
+    },
   });
 
-  const ready = all.filter((i) => i.ready);
-  const inProgress = all.filter((i) => !i.ready).sort((a, b) => a.remaining - b.remaining);
-
-  const totalRedeemed = Object.values(state.redeemed).flat().length;
+  const totalRedeemed = 0; // TODO: fetch from backend when available
 
   return (
     <div className="px-5 pt-8 pb-4 safe-top">
@@ -37,60 +106,65 @@ export default function Rewards() {
         <Sparkles className="absolute right-4 top-4 h-5 w-5 opacity-60" />
         <p className="text-xs uppercase tracking-wider opacity-80">Total redeemed</p>
         <p className="font-display text-5xl leading-none mt-2">{totalRedeemed}</p>
-        <p className="text-sm opacity-80 mt-1">{ready.length} ready right now</p>
+        <p className="text-sm opacity-80 mt-1">Visit spots to see ready rewards</p>
       </div>
-
-      {ready.length > 0 && (
-        <section className="mb-6">
-          <h2 className="font-display text-2xl mb-3">Ready to redeem</h2>
-          <div className="space-y-3">
-            {ready.map((i) => {
-              const r = RESTAURANTS.find((x) => x.id === i.restaurantId)!;
-              return (
-                <button
-                  key={`${i.restaurantId}-${i.rewardId}`}
-                  onClick={() => navigate(`/restaurant/${i.restaurantId}`)}
-                  className="w-full text-left rounded-3xl p-4 bg-gold/15 border border-gold/40 flex items-center gap-3 tap-scale"
-                >
-                  <div className="h-12 w-12 rounded-2xl gradient-gold flex items-center justify-center">
-                    <Gift className="h-6 w-6 text-gold-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold leading-tight">{i.title}</p>
-                    <p className="text-xs text-muted-foreground">{r.emoji} {r.name}</p>
-                  </div>
-                  <Button size="sm" className="rounded-xl">Redeem</Button>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       <section>
         <h2 className="font-display text-2xl mb-3">In progress</h2>
-        {inProgress.length === 0 ? (
-          <p className="text-sm text-muted-foreground">All rewards unlocked. Keep scanning!</p>
+
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading rewards...</p>
+        ) : error ? (
+          <p className="text-sm text-red-500">Failed to load rewards. Please try again.</p>
+        ) : inProgress.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No rewards in progress. Keep scanning!</p>
         ) : (
           <div className="space-y-3">
-            {inProgress.map((i) => {
-              const r = RESTAURANTS.find((x) => x.id === i.restaurantId)!;
-              const pct = Math.min(100, ((i.stampsRequired - i.remaining) / i.stampsRequired) * 100);
+            {inProgress.map((i: any) => {
+              const pct = Math.min(100, (i.stamps / i.stampsRequired) * 100);
+
               return (
                 <button
                   key={`${i.restaurantId}-${i.rewardId}`}
-                  onClick={() => navigate(`/restaurant/${i.restaurantId}`)}
-                  className="w-full text-left bg-card border border-border rounded-3xl p-4 shadow-soft tap-scale"
+                  onClick={() => navigate(`/programDetail/${i.restaurantId}`)}
+                  className="w-full text-left bg-card border border-border rounded-3xl p-4 shadow-soft tap-scale hover:border-primary/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-xl">{r.emoji}</div>
+                    <div
+                      className="h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-inner"
+                      style={{ backgroundColor: i.themeColor + "20", color: i.themeColor }}
+                    >
+                      🎁
+                    </div>
+
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold leading-tight truncate">{i.title}</p>
-                      <p className="text-xs text-muted-foreground">{r.name} · {i.remaining} more</p>
+                      <p className="font-semibold leading-tight truncate">
+                        {i.rewardDescription}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        {i.restaurantName}
+                        {i.location && (
+                          <>
+                            {" · "}
+                            <MapPin className="inline h-3 w-3" />
+                            {i.location}
+                          </>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {i.remaining} stamp{i.remaining === 1 ? "" : "s"} remaining
+                      </p>
                     </div>
                   </div>
+
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                    <div className="h-full gradient-primary" style={{ width: `${pct}%` }} />
+                    <div
+                      className="h-full transition-all duration-300"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: i.themeColor,
+                      }}
+                    />
                   </div>
                 </button>
               );

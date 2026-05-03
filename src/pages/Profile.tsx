@@ -1,14 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { useLoyalty, loyaltyStore } from "@/lib/store";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Bell, LogOut, RotateCcw, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { loyaltyStore } from "@/lib/store";
 
 export default function Profile() {
-  const state = useLoyalty();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  const profile = loyaltyStore((state) => state.user);
 
   useEffect(() => {
     const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
@@ -16,13 +20,15 @@ export default function Profile() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const totalStamps = Object.values(state.scans).reduce((a, b) => a + b, 0);
-  const totalRedeemed = Object.values(state.redeemed).flat().length;
+  const loyalTo = profile?.loyalTo || [];
+  const totalStamps = loyalTo.reduce((acc: number, curr: any) => acc + curr.stamps, 0);
+  const totalRedeemed = 0; // Not tracked by backend yet
 
-  const reset = () => {
-    loyaltyStore.reset();
-    toast.success("Account reset");
-    navigate("/", { replace: true });
+  const logout = () => {
+    localStorage.removeItem("token");
+    queryClient.clear();
+    toast.success("Logged out");
+    navigate("/onboarding", { replace: true });
   };
 
   const requestNotifications = async () => {
@@ -47,11 +53,11 @@ export default function Profile() {
     <div className="px-5 pt-8 pb-4 safe-top">
       <header className="mb-6 flex items-center gap-4">
         <div className="h-16 w-16 rounded-2xl gradient-hero text-primary-foreground flex items-center justify-center font-display text-2xl shadow-glow">
-          {(state.user.name || "G")[0].toUpperCase()}
+          {((profile?.name || "G")[0]).toUpperCase()}
         </div>
         <div>
           <p className="text-muted-foreground text-sm">Member</p>
-          <h1 className="font-display text-3xl leading-none">{state.user.name || "Guest"}</h1>
+          <h1 className="font-display text-3xl leading-none">{profile?.name || "Guest"}</h1>
         </div>
       </header>
 
@@ -66,7 +72,7 @@ export default function Profile() {
       </div>
 
       <div className="space-y-2">
-        <Row icon={<RotateCcw className="h-5 w-5" />} title="Reset account" desc="Clear stamps and rewards" onClick={reset} variant="destructive" />
+        <Row icon={<LogOut className="h-5 w-5" />} title="Log Out" desc="Sign out of your account" onClick={logout} variant="destructive" />
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-10">Stamp · v1.0 · Made with ☕</p>

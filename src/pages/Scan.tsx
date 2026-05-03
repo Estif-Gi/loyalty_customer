@@ -1,31 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Html5Qrcode } from "html5-qrcode";
-import { ArrowLeft, FlashlightIcon, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Sparkles, QrCode as QrCodeIcon, X, Camera } from "lucide-react";
+import QRCode from "react-qr-code";
 import { parseQR, DEMO_CODES } from "@/lib/qr";
-import { loyaltyStore } from "@/lib/store";
-import { getRestaurant } from "@/lib/mockData";
+import { fetchApi } from "@/lib/api";
 import { celebrate, haptic } from "@/lib/confetti";
+import { loyaltyStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function Scan() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const elId = "qr-reader";
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pulse, setPulse] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showMyCode, setShowMyCode] = useState(false);
   const handledRef = useRef(false);
 
-  useEffect(() => {
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => fetchApi("/users/profile"),
+  });
+
+  const startScanner = () => {
     let cancelled = false;
     const scanner = new Html5Qrcode(elId, { verbose: false });
     scannerRef.current = scanner;
+    setIsScanning(true);
+    setError(null);
 
     Html5Qrcode.getCameras()
       .then((devices) => {
         if (cancelled || !devices.length) {
-          if (!devices.length) setError("No camera found.");
+          if (!devices.length) {
+            setError("No camera found.");
+            setIsScanning(false);
+          }
           return;
         }
         const camera = devices.find((d) => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
@@ -39,13 +54,21 @@ export default function Scan() {
       .catch((e) => {
         console.error(e);
         setError("Camera permission denied or unavailable.");
+        setIsScanning(false);
       });
+  };
 
+  useEffect(() => {
     return () => {
-      cancelled = true;
-      scannerRef.current?.stop().catch(() => {}).finally(() => scannerRef.current?.clear().catch(() => {}));
+      const scanner = scannerRef.current;
+      if (!scanner) return;
+      void scanner
+        .stop()
+        .catch(() => {})
+        .finally(() => {
+          scanner.clear();
+        });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleResult = (text: string) => {
@@ -56,7 +79,7 @@ export default function Scan() {
     setTimeout(() => processCode(text), 250);
   };
 
-  const processCode = (text: string) => {
+  const processCode = async (text: string) => {
     const parsed = parseQR(text);
     if (parsed.kind === "unknown") {
       toast.error("Unrecognized QR code", { description: parsed.raw.slice(0, 60) });
@@ -64,8 +87,10 @@ export default function Scan() {
       setPulse(false);
       return;
     }
-    const restaurant = getRestaurant(parsed.restaurantId);
-    if (!restaurant) {
+
+    try {
+      await fetchApi(`/restaurants/${parsed.restaurantId}`, { skipAuth: true });
+    } catch (err) {
       toast.error("Restaurant not found");
       handledRef.current = false;
       setPulse(false);
@@ -73,90 +98,159 @@ export default function Scan() {
     }
 
     if (parsed.kind === "loyalty") {
-      const before = loyaltyStore.getState().scans[restaurant.id] || 0;
-      loyaltyStore.addScan(restaurant.id);
-      const after = before + 1;
-      const reward = restaurant.rewards.find((r) => r.stampsRequired === after);
-      if (reward) celebrate();
-      toast.success(reward ? `🎉 ${reward.title} unlocked!` : `+1 stamp at ${restaurant.name}`, {
-        description: reward ? "Check your rewards to redeem." : `${after} stamp${after === 1 ? "" : "s"} total`,
-      });
-      navigate(`/restaurant/${restaurant.id}`, { replace: true });
+      try {
+        if (!profile?._id) throw new Error("Not logged in");
+
+        await fetchApi("/users/stamps", {
+          method: "POST",
+          body: JSON.stringify({
+            customerId: profile.id,
+            restaurantId: parsed.restaurantId,
+            stampsToAdd: 1,
+          }),
+        });
+
+        celebrate();
+        toast.success(`+1 stamp added!`);
+        const updatedProfile = await fetchApi("/users/profile");
+        loyaltyStore.getState().setUser(updatedProfile);
+        navigate(`/restaurant/${parsed.restaurantId}`, { replace: true });
+      } catch (err: any) {
+        toast.error(err.message || "Failed to add stamp");
+        handledRef.current = false;
+        setPulse(false);
+      }
     } else {
-      navigate(`/menu/${restaurant.id}`, { replace: true });
+      navigate(`/menu/${parsed.restaurantId}`, { replace: true });
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black text-white">
+    <div className="fixed inset-0 z-30 bg-black text-white">
+      {/* Camera feed */}
       <div id={elId} className="absolute inset-0 [&>video]:object-cover [&>video]:w-full [&>video]:h-full" />
 
-      {/* Overlay */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-black/50" style={{
-          mask: "radial-gradient(circle at center, transparent 130px, black 132px)",
-          WebkitMask: "radial-gradient(circle at center, transparent 130px, black 132px)",
-        }} />
+      {/* Dimming overlay — lighter than before so it feels airier */}
+      <div className="absolute inset-0 pointer-events-none z-[1]">
+        <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/60 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/70 to-transparent" />
       </div>
 
-      {/* Top bar */}
-      <div className="absolute top-0 inset-x-0 safe-top p-4 flex items-center justify-between z-10">
-        <button onClick={() => navigate(-1)} className="h-11 w-11 rounded-full bg-black/40 backdrop-blur flex items-center justify-center tap-scale">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur text-sm font-medium">Point at a Stamp QR</div>
-        <div className="w-11" />
-      </div>
+      {/* ── Top bar ── */}
+      <div className="absolute top-0 inset-x-0 safe-top p-4 z-10">
+        <div className="w-full max-w-sm mx-auto flex items-center justify-between gap-3">
+          <button
+            onClick={() => {
+              navigate(-1);
+              setIsScanning(false);
+              setShowMyCode(false);
+            }}
+            className="h-11 w-11 rounded-full border border-white/20 bg-black/40 backdrop-blur-md flex items-center justify-center tap-scale"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
-      {/* Reticle */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className={`relative h-[260px] w-[260px] ${pulse ? "animate-haptic" : ""}`}>
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="absolute h-8 w-8 border-primary border-[3px]"
-              style={{
-                top: i < 2 ? -2 : "auto",
-                bottom: i >= 2 ? -2 : "auto",
-                left: i % 2 === 0 ? -2 : "auto",
-                right: i % 2 === 1 ? -2 : "auto",
-                borderTopWidth: i < 2 ? 3 : 0,
-                borderBottomWidth: i >= 2 ? 3 : 0,
-                borderLeftWidth: i % 2 === 0 ? 3 : 0,
-                borderRightWidth: i % 2 === 1 ? 3 : 0,
-                borderRadius: "8px",
-              }}
-            />
-          ))}
-          <div className="absolute inset-x-0 h-1 bg-gradient-to-b from-transparent via-primary to-transparent animate-scan-line" />
+          <div className="flex-1 text-center px-3 py-2 rounded-full border border-white/15 bg-black/40 backdrop-blur-md text-xs sm:text-sm font-medium shadow-soft truncate">
+            Point at a Stamp QR
+          </div>
+
+          <button
+            onClick={() => setShowMyCode(true)}
+            className="h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-soft backdrop-blur flex items-center justify-center tap-scale"
+          >
+            <QrCodeIcon className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
-      {/* Bottom: demo codes */}
-      <div className="absolute bottom-0 inset-x-0 p-4 safe-bottom z-10">
-        {error && (
-          <div className="bg-destructive/90 text-destructive-foreground rounded-2xl p-4 mb-3 text-sm">
-            {error} Use a demo code below to continue.
+      {/* ── Reticle / Start button — REDESIGNED ── */}
+      <div className="absolute inset-0 pb-32 flex items-center justify-center pointer-events-none z-[2]">
+        {!isScanning ? (
+          /* ── Tap-to-scan button: soft white card feel ── */
+          <button
+            onClick={startScanner}
+            className="pointer-events-auto flex flex-col items-center justify-center gap-4
+                       h-52 w-52 sm:h-56 sm:w-56 rounded-3xl
+                       bg-white/90 
+                       
+                       tap-scale transition-all duration-200 active:scale-95
+                       animate-in zoom-in"
+          >
+            {/* Soft icon container */}
+            <div className="h-16 w-16 rounded-2xl bg-orange-50 flex items-center justify-center
+                            ">
+              <Camera className="h-8 w-8 text-orange-400" strokeWidth={1.75} />
+            </div>
+            <div className="text-center">
+              <p className="text-gray-800 font-bold text-base tracking-wide leading-none">Tap to Scan</p>
+              <p className="text-gray-400 text-xs mt-1.5 font-medium">Point at a stamp QR code</p>
+            </div>
+          </button>
+        ) : (
+          /* ── Active scanning reticle: white corners, warm scan line ── */
+          <div
+            className={`relative h-[230px] w-[230px] sm:h-[260px] sm:w-[260px]`}
+          >
+            {/* Frosted glass inner panel */}
+            {/* <div className="absolute inset-0 rounded-2xl bg-white/5 backdrop-blur-[2px] " /> */}
+
+            {/* Corner brackets — crisp white */}
+            {/* {[
+              "top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl",
+              "top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl",
+              "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl",
+              "bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl",
+            ].map((cls, i) => (
+              <span key={i} className={`absolute h-8 w-8 border-white/90 ${cls}`} />
+            ))} */}
+
+            {/* Warm amber scan line */}
+            <div
+              className="absolute inset-x-3 h-0.5 rounded-full
+                         bg-gradient-to-r from-transparent to-transparent
+                         
+                         animate-scan-line"
+            />
+
+            {/* Subtle "Scanning…" label beneath */}
+            {/* <p className="absolute -bottom-9 inset-x-0 text-center text-white/70 text-xs font-medium tracking-widest uppercase animate-pulse">
+              Scanning…
+            </p> */}
           </div>
         )}
-        <details className="bg-black/60 backdrop-blur rounded-2xl text-sm">
-          <summary className="cursor-pointer p-4 font-semibold flex items-center gap-2 list-none">
-            <Sparkles className="h-4 w-4" /> Try a demo QR (no camera needed)
-          </summary>
-          <div className="p-3 pt-0 space-y-2">
-            {DEMO_CODES.map((d) => (
-              <Button
-                key={d.code}
-                variant="secondary"
-                className="w-full justify-start h-11 rounded-xl"
-                onClick={() => handleResult(d.code)}
-              >
-                {d.label}
-              </Button>
-            ))}
-          </div>
-        </details>
       </div>
+
+      
+
+      {/* ── Show My Code overlay (unchanged) ── */}
+      {showMyCode && profile && (
+        <div className="absolute inset-0 z-[60] bg-black/85 backdrop-blur-xl text-white flex flex-col items-center justify-center p-6 pb-28 animate-in fade-in duration-300">
+          <div className="absolute top-0 inset-x-0 safe-top p-4 flex justify-end items-center">
+            <button
+              onClick={() => setShowMyCode(false)}
+              className="bg-black/50 border border-white/15 h-11 w-11 rounded-full backdrop-blur transition-colors flex items-center justify-center tap-scale"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(255,255,255,0.15)] border border-white/80 flex flex-col items-center max-w-[340px] w-full mx-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            <div className="bg-white p-2 rounded-2xl border-2 border-gray-100 mb-6 shadow-sm w-full aspect-square flex items-center justify-center">
+              <QRCode
+                value={JSON.stringify({ customerId: profile._id, name: profile.name })}
+                size={240}
+                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+              />
+            </div>
+            <h3 className="font-display text-3xl text-gray-900 leading-none mb-2 text-center">{profile.name}</h3>
+            <p className="text-gray-500 text-center font-medium leading-tight">
+              Show this code to the cashier
+              <br />
+              to collect your stamps
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
