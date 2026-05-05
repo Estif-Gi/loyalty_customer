@@ -1,8 +1,12 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function AppShell() {
   const location = useLocation();
+
+  // Request FCM permission & listen for foreground push messages
+  useNotifications();
   const hideNav = location.pathname === "/" || location.pathname === "/onboarding";
 
   return (
