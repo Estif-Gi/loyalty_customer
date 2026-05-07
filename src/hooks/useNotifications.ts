@@ -22,9 +22,16 @@ async function registerTokenWithBackend(token: string): Promise<void> {
       },
       body: JSON.stringify({ fcmToken: token }),
     });
-    console.log("[Notifications] FCM token registered with backend ✓");
+    // console.log("[Notifications] FCM token registered with backend ✓");
   } catch (err) {
     console.warn("[Notifications] Failed to register FCM token with backend:", err);
+  }
+}
+
+export async function registerFcmToken(): Promise<void> {
+  const token = await requestNotificationPermission(VAPID_KEY);
+  if (token) {
+    await registerTokenWithBackend(token);
   }
 }
 

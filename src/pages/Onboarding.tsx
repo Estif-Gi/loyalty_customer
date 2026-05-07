@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { QrCode, Sparkles, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { loyaltyStore } from "@/lib/store";
+import { registerFcmToken } from "@/hooks/useNotifications";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -46,6 +47,7 @@ export default function Onboarding() {
           loyaltyStore.getState().setUser(data.user);
           loyaltyStore.getState().setOnboarded(true);
         }
+        await registerFcmToken();
         toast.success("Welcome back!");
       } else {
         const response = await fetch(`${API_BASE_URL}/users/register`, {
@@ -61,6 +63,7 @@ export default function Onboarding() {
           loyaltyStore.getState().setUser(data.user);
           loyaltyStore.getState().setOnboarded(true);
         }
+        await registerFcmToken();
         toast.success("Account created successfully!");
       }
       navigate("/home", { replace: true });

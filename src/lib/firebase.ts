@@ -53,7 +53,7 @@ export async function requestNotificationPermission(vapidKey?: string): Promise<
     });
 
     if (token) {
-      console.log("[FCM] Registration token:", token);
+      // console.log("[FCM] Registration token:", token);
       return token;
     }
 
