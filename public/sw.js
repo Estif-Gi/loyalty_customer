@@ -6,13 +6,13 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyA_8-RdhF_UuxLeXFDKNwOcl9awFRrz6qU",
-  authDomain: "loyalty-e883f.firebaseapp.com",
-  projectId: "loyalty-e883f",
-  storageBucket: "loyalty-e883f.firebasestorage.app",
-  messagingSenderId: "603261005182",
-  appId: "1:603261005182:web:f1da0df6b659e8b99c172f",
-  measurementId: "G-CC6YZ3GSYR",
+  apiKey: meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 });
 
 const messaging = firebase.messaging();
