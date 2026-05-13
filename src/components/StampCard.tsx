@@ -12,8 +12,27 @@ export function StampCard({
   goal: number;
   compact?: boolean;
 }) {
-  const stamps = Array.from({ length: goal }, (_, i) => i < count);
-  const remaining = Math.max(0, goal - count);
+  // Dynamic goal and size based on count
+  let dynamicGoal = goal;
+  let stampSize = "text-xs"; // default size
+  let stampContainerSize = "w-14 h-14"; // default circle size
+  let gridCols = goal <= 5 ? "grid-cols-5" : "grid-cols-5 sm:grid-cols-10";
+
+  if (count >= 10) {
+    dynamicGoal = 15;
+    stampSize = "text-[10px]"; // smaller
+    stampContainerSize = "w-10 h-10"; // smaller circles
+    gridCols = "grid-cols-5 sm:grid-cols-10 lg:grid-cols-15"; // adjust grid
+  }
+  if (count >= 15) {
+    dynamicGoal = 20;
+    stampSize = "text-[8px]"; // even smaller
+    stampContainerSize = "w-8 h-8"; // even smaller circles
+    gridCols = "grid-cols-5 sm:grid-cols-10 lg:grid-cols-15 xl:grid-cols-20"; // adjust grid
+  }
+
+  const stamps = Array.from({ length: dynamicGoal }, (_, i) => i < count);
+  const remaining = Math.max(0, dynamicGoal - count);
 
   return (
     <div   
@@ -39,23 +58,24 @@ export function StampCard({
           </div>
           <div className="text-right">
             <p className="font-display text-2xl text-primary leading-none">{count}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">/ {goal}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">/ {dynamicGoal}</p>
           </div>
         </div>
 
-        <div className={cn("grid gap-2", goal <= 5 ? "grid-cols-5" : "grid-cols-5 sm:grid-cols-10")}>
+        <div className={cn("grid gap-2", gridCols)}>
           {stamps.map((filled, i) => (
             <div
               key={i}
               className={cn(
-                "aspect-square rounded-full border-2 border-dashed flex items-center justify-center transition-all",
+                stampContainerSize,
+                "rounded-full border-2 border-dashed flex items-center justify-center transition-all",
                 filled
                   ? "border-solid bg-primary text-primary-foreground border-primary scale-100"
                   : "border-border text-muted-foreground/40"
               )}
               style={filled ? { animationDelay: `${i * 40}ms` } : undefined}
             >
-              <span className={cn("text-xs font-display", filled && "animate-pop-in")}>
+              <span className={cn(stampSize, "font-display", filled && "animate-pop-in")}>
                 {filled ? restaurant.emoji : ""}
               </span>
             </div>

@@ -28,7 +28,9 @@ export default function Home() {
     };
   });
 
-  const featured = visited.slice(0, 2);
+  // Sort by stamps descending and take top 2
+  const sortedVisited = visited.sort((a, b) => b.stamps - a.stamps);
+  const featured = sortedVisited.slice(0, 2);
   const totalStamps = visited.reduce((acc: number, curr: any) => acc + curr.stamps, 0);
   return (
     <div className="px-5 pt-8 pb-4 safe-top">
