@@ -30,7 +30,13 @@ export function StampCard({
     stampContainerSize = "w-8 h-8"; // even smaller circles
     gridCols = "grid-cols-5 sm:grid-cols-10 lg:grid-cols-15 xl:grid-cols-20"; // adjust grid
   }
-
+  if (count >= 20) {
+    dynamicGoal = 25;
+    stampSize = "text-[9px]"; // even smaller
+    stampContainerSize = "w-7 h-7"; // even smaller circles
+    gridCols = "grid-cols-5 sm:grid-cols-10 lg:grid-cols-15 xl:grid-cols-20 gap-1"; // adjust grid
+  }
+  
   const stamps = Array.from({ length: dynamicGoal }, (_, i) => i < count);
   const remaining = Math.max(0, dynamicGoal - count);
 
