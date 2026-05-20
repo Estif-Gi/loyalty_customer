@@ -1,12 +1,19 @@
 import { Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { BottomNav } from "./BottomNav";
 import { useNotifications } from "@/hooks/useNotifications";
+import { initSocketConnection } from "@/lib/socket";
 
 export function AppShell() {
   const location = useLocation();
 
   // Request FCM permission & listen for foreground push messages
   useNotifications();
+
+  useEffect(() => {
+    initSocketConnection();
+  }, []);
+
   const hideNav = location.pathname === "/" || location.pathname === "/onboarding";
 
   return (
