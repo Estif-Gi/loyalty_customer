@@ -5,14 +5,16 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
+const params = new URL(self.location.href).searchParams;
+
 firebase.initializeApp({
-  apiKey: meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: params.get('apiKey') || '',
+  authDomain: params.get('authDomain') || '',
+  projectId: params.get('projectId') || '',
+  storageBucket: params.get('storageBucket') || '',
+  messagingSenderId: params.get('messagingSenderId') || '',
+  appId: params.get('appId') || '',
+  measurementId: params.get('measurementId') || '',
 });
 
 const messaging = firebase.messaging();
