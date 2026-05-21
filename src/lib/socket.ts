@@ -2,7 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import { loyaltyStore } from "@/lib/store";
 import type { User } from "@/types";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:5001";
+const SOCKET_URL ="http://localhost:5001";
 let socket: Socket | null = null;
 
 interface ProfileDataPayload {
