@@ -17,9 +17,9 @@ function getAuthToken() {
 }
 
 function createSocket(token: string): Socket {
-  const socketClient = io(`${SOCKET_URL}/api`, {
+  const socketClient = io(`${SOCKET_URL}`, {
     auth: { token },
-    transports: ["websocket"],
+    transports: ["polling", "websocket"], // polling first, then upgrades to ws
     autoConnect: false,
   });
 
