@@ -2,7 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import { loyaltyStore } from "@/lib/store";
 import type { User } from "@/types";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || "https://estif.bahirandelivery.com/";
+const SOCKET_URL =import.meta.env.VITE_API_URL;
 let socket: Socket | null = null;
 
 interface ProfileDataPayload {
@@ -17,7 +17,7 @@ function getAuthToken() {
 }
 
 function createSocket(token: string): Socket {
-  const socketClient = io(SOCKET_URL, {
+  const socketClient = io(`${SOCKET_URL}/api`, {
     auth: { token },
     transports: ["websocket"],
     autoConnect: false,

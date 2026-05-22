@@ -5,7 +5,11 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "localhost",
+    host: "0.0.0.0", // Change from "localhost" to "0.0.0.0" for Docker
+    port: 8081,
+  },
+  preview: {
+    host: "0.0.0.0",
     port: 8081,
   },
   plugins: [
@@ -15,5 +19,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
+  },
+  build: {
+    outDir: "dist",
+    sourcemap: true,
   },
 }));
