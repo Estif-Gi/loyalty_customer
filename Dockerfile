@@ -4,7 +4,7 @@ COPY package*.json ./
 COPY pnpm-lock.yaml* ./
 RUN npm ci || npm install
 COPY . .
-RUN npm run build
+RUN npm run build && ls -la /app/dist/assets/
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
