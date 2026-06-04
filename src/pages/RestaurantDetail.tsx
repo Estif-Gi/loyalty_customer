@@ -6,15 +6,35 @@ import { StampCard } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { celebrate } from "@/lib/confetti";
 import { toast } from "sonner";
+import { withOpacity } from "@/lib/utils";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+type Reward = {
+  _id: string;
+  stampsRequired: number;
+  rewardDescription: string;
+};
+
+type Program = {
+  _id: string;
+  restaurant: string;
+  rewards: Reward[];
+};
+
+type RestaurantLoyaltyResponse = {
+  themeColor?: string;
+  name?: string;
+  location?: string;
+  programs?: Program[];
+};
+
 export default function RestaurantDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  // console.log("Restaurant ID from URL:", id);
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: () => fetchApi("/users/profile"),
@@ -26,9 +46,16 @@ export default function RestaurantDetail() {
     enabled: !!id,
   });
 
-  const { data: loyaltyProgram, isLoading: isLoyaltyLoading } = useQuery({
+  const { data: loyaltyResponse, isLoading: isLoyaltyLoading } = useQuery<RestaurantLoyaltyResponse | null>({
     queryKey: ["loyalty", id],
-    queryFn: () => fetchApi(`/loyalty/restaurant/${id}`).catch(() => null),
+    queryFn: async () => {
+      const response = await fetchApi(`/loyalty/restaurant/${id}`).catch(() => null);
+      if (!response) return null;
+      if (Array.isArray(response)) {
+        return { programs: response as Program[] };
+      }
+      return response as RestaurantLoyaltyResponse;
+    },
     enabled: !!id,
   });
 
@@ -49,8 +76,9 @@ export default function RestaurantDetail() {
   const loyaltyData = loyalTo.find((l: any) => l.resID === restaurant._id);
   const count = loyaltyData?.stamps || 0;
   
+  const loyaltyProgram = loyaltyResponse?.programs?.[0] ?? null;
   const rewards = loyaltyProgram?.rewards || [];
-  const nextReward = rewards.find((r: any) => r.stampsRequired > count) || rewards[rewards.length - 1] || { stampsRequired: 10 };
+  const nextReward = rewards.find((r: Reward) => r.stampsRequired > count) || rewards[rewards.length - 1] || { stampsRequired: 10, rewardDescription: "Next reward", _id: "next" };
 
   const onRedeem = (rewardId: string, stampsRequired: number, title: string) => {
     if (count < stampsRequired) {
@@ -67,7 +95,11 @@ export default function RestaurantDetail() {
     <div className="pb-4">
       <div
         className="relative px-5 pt-6 pb-8 safe-top"
-        style={{ background: `linear-gradient(160deg, ${restaurant.themeColor || '#184565'} 0%, ${restaurant.themeColor || '#184565'}b3 100%)` }}
+        style={{
+          background: restaurant.themeColor
+            ? `linear-gradient(160deg, ${restaurant.themeColor} 0%, ${withOpacity(restaurant.themeColor, 0.7)} 100%)`
+            : `linear-gradient(160deg, #184565 0%, #184565b3 100%)`,
+        }}
       >
         <button onClick={() => navigate(-1)} className="h-10 w-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white tap-scale">
           <ArrowLeft className="h-5 w-5" />

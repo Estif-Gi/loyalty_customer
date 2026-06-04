@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Gift, Sparkles, MapPin } from "lucide-react";
 import { loyaltyStore } from "@/lib/store";
+import {withOpacity} from "@/lib/utils";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -132,7 +133,7 @@ export default function Rewards() {
                   <div className="flex items-center gap-3 mb-3">
                     <div
                       className="h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-inner"
-                      style={{ backgroundColor: i.themeColor + "20", color: i.themeColor }}
+                      style={{ backgroundColor: withOpacity(i.themeColor, 0.12) || "rgba(255,255,255,0.08)", color: i.themeColor }}
                     >
                       🎁
                     </div>

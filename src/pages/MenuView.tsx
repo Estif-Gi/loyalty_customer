@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, withOpacity } from "@/lib/utils";
 import { loyaltyStore } from "@/lib/store";
 
 export default function MenuView() {
@@ -76,7 +76,11 @@ export default function MenuView() {
     <div className="pb-4">
       <div
         className="px-5 pt-6 pb-8 safe-top relative"
-        style={{ background: `linear-gradient(160deg, ${restaurant.themeColor || '#184565'} 0%, ${restaurant.themeColor || '#184565'}b3 100%)` }}
+        style={{
+          background: restaurant.themeColor
+            ? `linear-gradient(160deg, ${restaurant.themeColor} 0%, ${withOpacity(restaurant.themeColor, 0.7)} 100%)`
+            : `linear-gradient(160deg, #184565 0%, #184565b3 100%)`,
+        }}
       >
         <button onClick={() => navigate(-1)} className="h-10 w-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white tap-scale">
           <ArrowLeft className="h-5 w-5" />
@@ -115,7 +119,7 @@ export default function MenuView() {
             <div key={item._id || item.name} className="bg-card border border-border rounded-3xl p-4 shadow-soft flex items-start gap-3">
               <div
                 className="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-                style={{ background: restaurant.themeColor ? `${restaurant.themeColor}1f` : `hsl(18 65% 42% / 0.12)` }}
+                style={{ background: restaurant.themeColor ? withOpacity(restaurant.themeColor, 0.12) : `hsl(18 65% 42% / 0.12)` }}
               >
                 {restaurant.emoji || "🍽️"}
               </div>

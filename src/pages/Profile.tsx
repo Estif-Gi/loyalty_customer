@@ -6,6 +6,7 @@ import { Bell, LogOut, RotateCcw, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { loyaltyStore } from "@/lib/store";
+import { disconnectSocket } from "@/lib/socket";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function Profile() {
   const totalRedeemed = 0; // Not tracked by backend yet
 
   const logout = () => {
+    disconnectSocket();
     localStorage.removeItem("token");
     queryClient.clear();
     toast.success("Logged out");

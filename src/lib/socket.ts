@@ -2,8 +2,11 @@ import { io, type Socket } from "socket.io-client";
 import { loyaltyStore } from "@/lib/store";
 import type { User } from "@/types";
 
-const SOCKET_URL =import.meta.env.VITE_API_URL;
+const API_URL = (import.meta.env.VITE_API_URL ?? "") as string;
+const SOCKET_URL =
+  ((import.meta.env.VITE_SOCKET_URL as string | undefined) || API_URL).replace(/\/api\/?$/, "");
 let socket: Socket | null = null;
+let socketToken: string | null = null;
 
 interface ProfileDataPayload {
   success: boolean;
@@ -17,19 +20,23 @@ function getAuthToken() {
 }
 
 function createSocket(token: string): Socket {
-  const socketClient = io(`${SOCKET_URL}`, {
+  const socketClient = io(SOCKET_URL, {
     auth: { token },
-    transports: ["polling", "websocket"], // polling first, then upgrades to ws
+    transports: ["websocket", "polling"],
     autoConnect: false,
   });
 
   socketClient.on("connect", () => {
-    console.log("[Socket] connected");
+    console.log("[Socket] connected", socketClient.id);
     socketClient.emit("getProfile");
   });
 
   socketClient.on("connect_error", (error) => {
-    console.warn("[Socket] connect error:", error);
+    console.warn("[Socket] connect error:", error.message);
+  });
+
+  socketClient.on("disconnect", (reason) => {
+    console.log("[Socket] disconnected:", reason);
   });
 
   socketClient.on("profileData", (payload: ProfileDataPayload) => {
@@ -46,11 +53,25 @@ function createSocket(token: string): Socket {
 
 export function initSocketConnection(): Socket | null {
   if (typeof window === "undefined") return null;
-  if (socket && socket.connected) return socket;
 
   const token = getAuthToken();
-  if (!token) return null;
+  if (!token) {
+    disconnectSocket();
+    return null;
+  }
 
+  if (socket && socketToken === token) {
+    if (!socket.connected && !socket.active) {
+      socket.connect();
+    }
+    return socket;
+  }
+
+  if (socket) {
+    socket.disconnect();
+  }
+
+  socketToken = token;
   socket = createSocket(token);
   socket.connect();
   return socket;
@@ -66,4 +87,5 @@ export function disconnectSocket(): void {
   if (!socket) return;
   socket.disconnect();
   socket = null;
+  socketToken = null;
 }

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Gift, Sparkles, Ticket } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import { withOpacity } from "@/lib/utils";
 
 type Reward = {
   _id: string;
@@ -115,12 +116,14 @@ export default function ProgramDetail() {
     );
   }
 
+  const programThemeColor = programResponse?.themeColor || "#184565";
+
   return (
     <div className="pb-4">
       <div
         className="px-5 pt-6 pb-7 safe-top text-primary-foreground"
         style={{
-          background: `linear-gradient(140deg, ${programResponse?.themeColor || "#184565"} 0%, ${programResponse?.themeColor || "#184565"}cc 100%)`,
+          background: `linear-gradient(140deg, ${programThemeColor} 0%, ${withOpacity(programThemeColor, 0.8)} 100%)`,
         }}
       >
         <button
