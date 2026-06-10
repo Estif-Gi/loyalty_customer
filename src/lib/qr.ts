@@ -1,37 +1,25 @@
-export type QRPayload =
-  | { kind: "loyalty"; restaurantId: string }
-  | { kind: "menu"; restaurantId: string }
-  | { kind: "unknown"; raw: string };
-
-// Accepts:
-//   stamp://loyalty/<restaurantId>
-//   stamp://menu/<restaurantId>
-//   {"app":"stamp","type":"loyalty","restaurantId":"..."}
-//   plain restaurant id
-export function parseQR(text: string): QRPayload {
-  const trimmed = text.trim();
-
-  // URL form
-  const urlMatch = trimmed.match(/^stamp:\/\/(loyalty|menu)\/([\w-]+)/i);
-  if (urlMatch) {
-    const kind = urlMatch[1].toLowerCase() as "loyalty" | "menu";
-    return { kind, restaurantId: urlMatch[2] };
+// In @/lib/qr file
+export const parseQR = (text) => {
+  // Pattern to match your URL structure
+  const urlPattern = /^https:\/\/loyal\.bahirandelivery\.com\/(menu|restaurant)\/([a-f0-9]+)$/i;
+  const match = text.match(urlPattern);
+  
+  if (match) {
+    const type = match[1]; // 'menu' or 'restaurant'
+    const restaurantId = match[2]; // The ID part
+    
+    return {
+      kind: type === 'menu' ? 'menu' : 'loyalty', // or however you want to map it
+      restaurantId: restaurantId,
+      raw: text
+    };
   }
+  
+  // If URL doesn't match the expected pattern
+  return {
+    kind: 'unknown',
+    raw: text
+  };
 
-  // JSON form
-  try {
-    const obj = JSON.parse(trimmed);
-    if (obj?.app === "stamp" && obj?.restaurantId && (obj.type === "loyalty" || obj.type === "menu")) {
-      return { kind: obj.type, restaurantId: obj.restaurantId };
-    }
-  } catch {}
-
-  // Assume plain string might be a mongodb ID or generic ID fallback to loyalty
-  if (/^[a-f\d]{24}$/i.test(trimmed)) {
-    return { kind: "loyalty", restaurantId: trimmed };
-  }
-
-  return { kind: "unknown", raw: trimmed };
-}
-
-export const DEMO_CODES: Array<{ label: string; code: string }> = [];
+  
+};

@@ -82,7 +82,7 @@ export default function Scan() {
   const processCode = async (text: string) => {
     const parsed = parseQR(text);
     if (parsed.kind === "unknown") {
-      toast.error("Unrecognized QR code", { description: parsed.raw.slice(0, 60) });
+      toast.error("Unrecognized QR code");
       handledRef.current = false;
       setPulse(false);
       return;

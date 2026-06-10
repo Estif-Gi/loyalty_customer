@@ -91,17 +91,7 @@ const NewSpots = () => {
 
   return (
     <section ref={observe} className="space-y-3 pb-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">New spots</p>
-          <h2 className="text-xl font-medium">Discover</h2>
-        </div>
-        {!isLoading && (
-          <span className="rounded-full border border-border bg-muted/60 px-3 py-1 text-[11px] font-medium text-muted-foreground">
-            {restaurants.length} spots
-          </span>
-        )}
-      </div>
+
 
       {isError ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">

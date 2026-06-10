@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "0.0.0.0", // Change from "localhost" to "0.0.0.0" for Docker
+    host: "localhost", // Change from "localhost" to "0.0.0.0" for Docker
     port: 8081,
   },
   preview: {

@@ -28,6 +28,8 @@ export default function Profile() {
   const logout = () => {
     disconnectSocket();
     localStorage.removeItem("token");
+    localStorage.removeItem("loyalty-storage");
+    localStorage.removeItem("auth-storage");
     queryClient.clear();
     toast.success("Logged out");
     navigate("/onboarding", { replace: true });

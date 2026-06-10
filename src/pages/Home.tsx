@@ -15,7 +15,7 @@ export default function Home() {
   }
 
   const loyalTo = profile.loyalTo || [];
-  
+
   // Build cards directly from the user payload returned during authentication.
   const visited = loyalTo.map((l: any) => {
     return {
@@ -82,8 +82,12 @@ export default function Home() {
       {/* Discover */}
       <section>
         <h2 className="font-display text-2xl mb-3">Discover Spots</h2>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">New spots</p>
+          <h2 className="text-xl font-medium">Discover</h2>
+        </div>
         <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 scrollbar-hide">
-        <NewSpots />
+          <NewSpots />
         </div>
       </section>
     </div>
