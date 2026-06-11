@@ -72,11 +72,28 @@ export default function Home() {
           </div>
         </section>
       ) : (
-        <div className="rounded-3xl border-2 border-dashed border-border p-8 text-center mb-6">
-          <p className="text-4xl mb-2">📷</p>
-          <p className="font-semibold">No stamps yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Tap the scan button to get started.</p>
-        </div>
+        <section className="mb-6">
+          <div className="rounded-3xl overflow-hidden bg-card border border-border shadow-soft p-5 flex  gap-5 sm:flex-row items-center">
+            <div className="flex-1">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Start earning rewards!</p>
+              <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-4">Scan at partner locations to collect stamps and unlock exciting rewards.</h2>
+              <button
+                type="button"
+                onClick={() => navigate("/scan")}
+                className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90"
+              >
+                Scan Now
+              </button>
+            </div>
+            <div className="flex-1 max-w-sm ">
+              <img
+                src="home%20page%20img.png"
+                alt="Scan now"
+                className="w-full rounded-[2rem] object-cover"
+              />
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Discover */}

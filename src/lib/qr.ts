@@ -20,6 +20,4 @@ export const parseQR = (text) => {
     kind: 'unknown',
     raw: text
   };
-
-  
 };
