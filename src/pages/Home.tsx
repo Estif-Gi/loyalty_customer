@@ -1,3 +1,4 @@
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { StampCard } from "@/components/StampCard";
 import { Sparkles } from "lucide-react";
@@ -9,7 +10,7 @@ export default function Home() {
 
   const profile = loyaltyStore((state) => state.user);
 
-  if (!profile) {
+  if (!profile ) {
     navigate("/onboarding", { replace: true });
     return null;
   }
@@ -73,24 +74,28 @@ export default function Home() {
         </section>
       ) : (
         <section className="mb-6">
-          <div className="rounded-3xl overflow-hidden bg-card border border-border shadow-soft p-5 flex  gap-5 sm:flex-row items-center">
-            <div className="flex-1">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-3">Start earning rewards!</p>
-              <h2 className="font-display text-2xl sm:text-3xl leading-tight mb-4">Scan at partner locations to collect stamps and unlock exciting rewards.</h2>
-              <button
-                type="button"
-                onClick={() => navigate("/scan")}
-                className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90"
-              >
-                Scan Now
-              </button>
-            </div>
-            <div className="flex-1 max-w-sm ">
-              <img
-                src="home%20page%20img.png"
-                alt="Scan now"
-                className="w-full rounded-[2rem] object-cover"
-              />
+          <div className="rounded-3xl overflow-hidden bg-card border border-border shadow-soft p-5 flex  gap- flex-col items-end">
+            <p className="text-xl uppercase font-bold mb-3 flex self-start">Start earning rewards!</p>
+            <div className="flex">
+              <div className="flex-1 ">
+                <h2 className="text-[14px] mb-4">Scan at partner locations to collect stamps and unlock exciting rewards.</h2>
+                <button
+                  type="button"
+                  onClick={() => navigate("/scan")}
+                  className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90"
+                >
+                  Scan Now
+                </button>
+              </div>
+
+
+              <div className="flex-1 max-w-sm ">
+                <img
+                  src="home%20page%20img.webp"
+                  alt="Scan now"
+                  className="w-full rounded-[2rem] object-cover"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -98,11 +103,8 @@ export default function Home() {
 
       {/* Discover */}
       <section>
-        <h2 className="font-display text-2xl mb-3">Discover Spots</h2>
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">New spots</p>
-          <h2 className="text-xl font-medium">Discover</h2>
-        </div>
+        <h2 className="font-display text-2xl ">Discover Spots</h2>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-3">New spots</p>
         <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 scrollbar-hide">
           <NewSpots />
         </div>

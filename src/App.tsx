@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/AppShell";
+import { AuthProvider } from "@/lib/AuthContext";
 import { loyaltyStore } from "@/lib/store";
 import ProgramDetail from "./pages/programDetail";
 
@@ -45,23 +46,25 @@ const App = () => {
         <Toaster />
         <Sonner position="top-center" />
         <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route element={<AppShell />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/scan" element={<Scan />} />
-                <Route path="/restaurants" element={<Restaurants />} />
-                <Route path="/restaurant/:id" element={<RestaurantDetail />} />
-                <Route path="/menu/:id" element={<MenuView />} />
-                <Route path="/rewards" element={<Rewards />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/programDetail/:id" element={<ProgramDetail />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </Suspense>
+          <AuthProvider>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route element={<AppShell />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/scan" element={<Scan />} />
+                  <Route path="/restaurants" element={<Restaurants />} />
+                  <Route path="/restaurant/:id" element={<RestaurantDetail />} />
+                  <Route path="/menu/:id" element={<MenuView />} />
+                  <Route path="/rewards" element={<Rewards />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/programDetail/:id" element={<ProgramDetail />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

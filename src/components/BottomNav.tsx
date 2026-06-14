@@ -15,7 +15,7 @@ export function BottomNav() {
   const isScan = location.pathname === "/scan";
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-gradient-to-t from-[#7B3E19]/80 via-[#2A1C14]/0 to-transparent pointer-events-none "
+    <nav className="fixed bottom-0 inset-x-0 z-40 bg-gradient-to-t from-[#ebe0cc]/90 via-[#2A1C14]/0 to-transparent pointer-events-none "
 >
       <div className="relative mx-auto max-w-md px-4 pb-2">
         <div className="pointer-events-auto bg-card/95 backdrop-blur-xl border border-border shadow-card rounded-3xl h-16 grid grid-cols-5 items-center">

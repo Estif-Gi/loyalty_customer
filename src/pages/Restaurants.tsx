@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
@@ -73,7 +73,7 @@ export default function Restaurants() {
                   const count = l.stamps || 0;
                   const goal = 10;
                   const pct = Math.min(100, (count / goal) * 100);
-
+                  console.log({ name: l.name, count, pct , loyalRestaurants});
                   return (
                     <li key={l._id || l.resID}>
                       <button

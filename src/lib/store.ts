@@ -9,6 +9,7 @@ interface UserState {
   setUser: (user: User) => void;
   setOnboarded: (value: boolean) => void;
   setHasHydrated: (value: boolean) => void;
+  logout: () => void;
 }
 
 export const loyaltyStore = create<UserState>()(
@@ -26,6 +27,16 @@ export const loyaltyStore = create<UserState>()(
       setOnboarded: (onboarded) =>
         set((state) => ({ user: { ...state.user, onboarded } })),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
+      logout: () =>
+        set({
+          user: {
+            id: "",
+            name: "",
+            role: "customer",
+            loyalTo: [],
+            onboarded: false,
+          },
+        }),
     }),
     {
       name: "loyalty-storage",

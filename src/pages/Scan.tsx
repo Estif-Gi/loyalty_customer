@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode , Html5QrcodeScannerState} from "html5-qrcode";
 import { ArrowLeft, Sparkles, QrCode as QrCodeIcon, X, Camera } from "lucide-react";
 import QRCode from "react-qr-code";
-import { parseQR, DEMO_CODES } from "@/lib/qr";
+import { parseQR  } from "@/lib/qr";
 import { fetchApi } from "@/lib/api";
 import { celebrate, haptic } from "@/lib/confetti";
 import { loyaltyStore } from "@/lib/store";
@@ -58,18 +58,30 @@ export default function Scan() {
       });
   };
 
-  useEffect(() => {
-    return () => {
-      const scanner = scannerRef.current;
-      if (!scanner) return;
+ useEffect(() => {
+  return () => {
+    const scanner = scannerRef.current;
+    if (!scanner) return;
+
+    const state = scanner.getState();
+    const canStop =
+      state === Html5QrcodeScannerState.SCANNING ||
+      state === Html5QrcodeScannerState.PAUSED;
+
+    if (canStop) {
       void scanner
         .stop()
         .catch(() => {})
         .finally(() => {
           scanner.clear();
         });
-    };
-  }, []);
+    } else {
+      try {
+        scanner.clear();
+      } catch {}
+    }
+  };
+}, []);
 
   const handleResult = (text: string) => {
     if (handledRef.current) return;
@@ -162,6 +174,38 @@ export default function Scan() {
           </button>
         </div>
       </div>
+
+      {/* Camera error banner */}
+      {error && (
+        <div className="absolute top-20 inset-x-4 z-20">
+          <div className="max-w-sm mx-auto bg-red-200 text-white rounded-2xl p-4 flex items-start gap-3 shadow">
+            <div className="flex-1">
+              <p className="font-medium text-black">Camera error</p>
+              <p className="text-sm opacity-90 text-black mt-1">{error}</p>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  onClick={() => {
+                    setError(null);
+                    startScanner();
+                  }}
+                >
+                  Retry
+                </Button>
+                <Button
+                  className="bg-orange-200 text-black"
+                  variant="ghost"
+                  onClick={() => {
+                    setError(null);
+                    setIsScanning(false);
+                  }}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Reticle / Start button — REDESIGNED ── */}
       <div className="absolute inset-0 pb-32 flex items-center justify-center pointer-events-none z-[2]">

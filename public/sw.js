@@ -33,10 +33,14 @@ messaging.onBackgroundMessage((payload) => {
   if (payload.notification) return;
 
   const notificationTitle = payload.data?.title ?? 'Stamp Loyalty';
+  const defaultNotifIcon = '/icon-512.png';
+  const defaultNotifBadge = '/icon-512.png';
   const notificationOptions = {
     body: payload.data?.body ?? '',
-    icon: '/icon-512.png',
-    badge: '/icon-512.png',
+    // allow the server to override icon/badge via payload.data, otherwise
+    // fall back to the app's default notification assets.
+    icon: payload.data?.icon ?? defaultNotifIcon,
+    badge: payload.data?.badge ?? defaultNotifBadge,
     // `url` comes from the message's data field so the click handler can
     // deep-link to the right page (e.g. '/rewards', '/home', etc.).
     data: {
@@ -52,7 +56,7 @@ messaging.onBackgroundMessage((payload) => {
 // ============================================================
 //  PWA Cache – Stamp Loyalty
 // ============================================================
-const CACHE_NAME = 'stamp-loyalty-cache-v2';
+const CACHE_NAME = 'stamp-loyalty-cache-v3';
 const urlsToCache = [
   '/',
   '/index.html',
