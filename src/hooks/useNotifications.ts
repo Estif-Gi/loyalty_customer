@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, createElement } from "react";
 import { toast } from "sonner";
 import { requestNotificationPermission, onForegroundMessage } from "@/lib/firebase";
 
@@ -66,11 +66,20 @@ export function useNotifications() {
         payload.notification?.title ?? payload.data?.title ?? "New notification";
       const body = payload.notification?.body ?? payload.data?.body;
       const url = payload.data?.url;
+      const iconUrl = payload.data?.icon;
 
       toast(title, {
         description: body,
         duration: 6000,
-        icon: "🔔",
+        icon: iconUrl
+          ? createElement("img", {
+              src: iconUrl,
+              alt: "",
+              width: 20,
+              height: 20,
+              style: { borderRadius: "9999px", objectFit: "cover" },
+            })
+          : "🔔",
         action: url
           ? { label: "View", onClick: () => (window.location.href = url) }
           : undefined,
