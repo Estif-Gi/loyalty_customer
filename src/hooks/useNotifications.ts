@@ -61,6 +61,16 @@ export function useNotifications() {
   // Foreground message listener – show toast while the app is open
   useEffect(() => {
     const unsubscribe = onForegroundMessage((payload) => {
+      // Vibrate and play a short sound for foreground notifications
+      if (typeof window !== "undefined") {
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
+        const audio = new Audio("/sounds/notify.mp3");
+        audio.play().catch(() => {
+          /* autoplay may be blocked until user interacts */
+        });
+      }
+
       // Support both notification-type and data-only payloads
       const title =
         payload.notification?.title ?? payload.data?.title ?? "New notification";
