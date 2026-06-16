@@ -36,11 +36,9 @@ messaging.onBackgroundMessage((payload) => {
   const defaultNotifIcon = '/icon-512.png';
   const defaultNotifBadge = '/icon-512.png';
   const notificationOptions = {
-    badge: '/L.png', 
     body: payload.data?.body ?? '',
     // allow the server to override icon/badge via payload.data, otherwise
     // fall back to the app's default notification assets.
-    vibrate: [200, 100, 200],
     icon: payload.data?.icon ?? defaultNotifIcon,
     badge: payload.data?.badge ?? defaultNotifBadge,
     // `url` comes from the message's data field so the click handler can

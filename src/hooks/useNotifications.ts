@@ -85,8 +85,8 @@ export function useNotifications() {
           ? createElement("img", {
               src: iconUrl,
               alt: "",
-              width: 20,
-              height: 20,
+              width: 60,
+              height: 60,
               style: { borderRadius: "9999px", objectFit: "cover" },
             })
           : "🔔",
