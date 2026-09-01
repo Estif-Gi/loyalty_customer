@@ -82,6 +82,13 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
   const nameParts = restaurant.name.match(/^(\S+'s)\s+(.+)$/i);
   const ownerName = nameParts?.[1] ?? null;
   const mainName = nameParts?.[2] ?? restaurant.name;
+  const nameLength = mainName.length;
+  const nameClass =
+    nameLength > 28 ? 'text-white text-[14px]' :
+    nameLength > 20 ? 'text-white text-[16px]' :
+    nameLength > 12 ? 'text-white text-[18px]' :
+    'text-white text-[20px]';
+  const ownerClass = ownerName && ownerName.length > 12 ? 'text-white/80 text-[11px] font-normal' : 'text-white/80 text-[13px] font-normal';
 
   return (
     <div
@@ -90,7 +97,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
     >
       {/* Colored header */}
       <div
-        className="relative px-4 pt-4 pb-0"
+        className="relative flex px-4 gap-2 pt-4 pb-0"
         style={{ backgroundColor: themeColor, minHeight: 140 }}
       >
         {/* Circular icon */}
@@ -99,17 +106,17 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
         >
           <span className="text-2xl">{icon}</span>
         </div>
-
+          {/* Thin divider line */}
+          <div className="h-8 w-[2px] bg-white/40 my-2" />
         {/* Name */}
-        <div className="mb-1">
+        <div className="mb-1 ">
           {ownerName && (
-            <p className="text-white/80 text-[13px] font-normal leading-tight">{ownerName}</p>
+            <p className={ownerClass}>{ownerName}</p>
           )}
-          <p className="text-white text-[20px] font-bold leading-tight">{mainName}</p>
+          <p className={`${nameClass} font-bold leading-tight`}>{mainName}</p>
         </div>
 
-        {/* Thin divider line */}
-        <div className="w-8 h-[2px] bg-white/40 my-2" />
+
 
         {/* Cuisine type */}
         {restaurant.cuisineType && (

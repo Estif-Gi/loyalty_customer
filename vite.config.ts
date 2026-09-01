@@ -5,20 +5,28 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "localhost", // Change from "localhost" to "0.0.0.0" for Docker
+    host: true, // Listen on all local and loopback addresses
     port: 8081,
+    strictPort: false, // Automatically fallback to next port if 8081 is busy
   },
   preview: {
-    host: "0.0.0.0",
+    host: true,
     port: 8081,
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
+    mode === "development" && componentTagger && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
   },
   build: {
     outDir: "dist",

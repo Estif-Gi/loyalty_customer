@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn, withOpacity } from "@/lib/utils";
+import { cn, withOpacity, formatCurrency } from "@/lib/utils";
 import { loyaltyStore } from "@/lib/store";
 
 export default function MenuView() {
@@ -126,7 +126,7 @@ export default function MenuView() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-display text-lg leading-tight">{item.name}</p>
-                  <p className="font-semibold text-primary">${item.price?.toFixed(2)}</p>
+                  <p className="font-semibold text-primary">{formatCurrency(item.price)}</p>
                 </div>
                 {item.description && <p className="text-sm text-muted-foreground mt-1">{item.description}</p>}
               </div>

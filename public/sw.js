@@ -88,11 +88,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin and non-GET requests
+  // Skip cross-origin, non-GET, and all API calls to ensure ordering/sessions remain network-authoritative
   if (!event.request.url.startsWith(self.location.origin)) return;
   if (event.request.method !== 'GET') return;
+  if (event.request.url.includes('/api/')) return;
 
-  // Stale-while-revalidate
+  // Stale-while-revalidate for static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {

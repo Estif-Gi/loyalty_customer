@@ -1,21 +1,21 @@
-// Splash route — redirects based on onboarding state.
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// Splash route — redirects based on auth state.
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
 
 const Index = () => {
-  const navigate = useNavigate();
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    navigate(token ? "/home" : "/onboarding", { replace: true });
-  }, [navigate]);
+  const { isAuthenticated, isInitialized } = useAuth();
 
-  return (
-    <div className="min-h-dvh flex items-center justify-center gradient-warm">
-      <div className="h-20 w-20 rounded-3xl gradient-hero shadow-glow flex items-center justify-center animate-pop-in">
-        <span className="text-4xl">☕</span>
+  if (!isInitialized) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center gradient-warm">
+        <div className="h-20 w-20 rounded-3xl gradient-hero shadow-glow flex items-center justify-center animate-pop-in">
+          <span className="text-4xl">☕</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <Navigate to={isAuthenticated ? "/home" : "/onboarding"} replace />;
 };
 
 export default Index;

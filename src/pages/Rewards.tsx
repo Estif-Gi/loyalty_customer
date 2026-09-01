@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Gift, Sparkles, MapPin } from "lucide-react";
 import { loyaltyStore } from "@/lib/store";
-import {withOpacity} from "@/lib/utils";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { withOpacity } from "@/lib/utils";
+import { ENV } from "@/lib/env";
 
 type Reward = {
   stampsRequired: number;
@@ -41,7 +40,7 @@ export default function Rewards() {
         loyalTo.map(async (l: any) => {
           try {
             const response = await fetch(
-              `${API_BASE_URL}/loyalty/restaurant/${l.resID}`,
+              `${ENV.API_BASE_URL}/loyalty/restaurant/${l.resID}`,
               {
                 headers: token ? { Authorization: `Bearer ${token}` } : undefined,
               }

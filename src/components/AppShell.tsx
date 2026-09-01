@@ -14,11 +14,14 @@ export function AppShell() {
     initSocketConnection();
   }, []);
 
-  const hideNav = location.pathname === "/" || location.pathname === "/onboarding";
+  const hideNav =
+    location.pathname === "/" ||
+    location.pathname === "/onboarding" ||
+    location.pathname.startsWith("/order/");
 
   return (
     <div className="min-h-dvh gradient-warm flex flex-col">
-      <main className="flex-1 mx-auto w-full max-w-md pb-28">
+      <main className={`flex-1 mx-auto w-full max-w-md ${hideNav ? "pb-4" : "pb-28"}`}>
         <div key={location.pathname} className={location.pathname === "/scan" ? "h-full" : "animate-fade-in-up"}>
           <Outlet />
         </div>

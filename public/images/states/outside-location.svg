@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <circle cx="100" cy="100" r="80" fill="#FFF7ED" />
+  <circle cx="100" cy="100" r="60" stroke="#F97316" stroke-width="3" stroke-dasharray="6 6" fill="none"/>
+  <circle cx="100" cy="100" r="35" stroke="#FDBA74" stroke-width="2" fill="none"/>
+  <circle cx="100" cy="100" r="8" fill="#F97316"/>
+  <!-- User outside ring -->
+  <circle cx="150" cy="60" r="16" fill="#EF4444"/>
+  <path d="M144 60L156 60" stroke="white" stroke-width="3" stroke-linecap="round"/>
+</svg>

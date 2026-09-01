@@ -100,6 +100,12 @@ export default function Scan() {
       return;
     }
 
+    if (parsed.kind === "order-start") {
+      celebrate();
+      navigate(`/order/start?t=${parsed.token}`, { replace: true });
+      return;
+    }
+
     try {
       await fetchApi(`/restaurants/${parsed.restaurantId}`, { skipAuth: true });
     } catch (err) {
@@ -111,12 +117,12 @@ export default function Scan() {
 
     if (parsed.kind === "loyalty") {
       try {
-        if (!profile?._id) throw new Error("Not logged in");
+        if (!profile?._id && !profile?.id) throw new Error("Not logged in");
 
         await fetchApi("/users/stamps", {
           method: "POST",
           body: JSON.stringify({
-            customerId: profile.id,
+            customerId: profile.id || profile._id,
             restaurantId: parsed.restaurantId,
             stampsToAdd: 1,
           }),

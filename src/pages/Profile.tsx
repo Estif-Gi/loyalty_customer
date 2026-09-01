@@ -29,9 +29,12 @@ export default function Profile() {
   const logout = () => {
     disconnectSocket();
     localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
     localStorage.removeItem("loyalty-storage");
     localStorage.removeItem("auth-storage");
     queryClient.clear();
+    loyaltyStore.getState().logout();
     toast.success("Logged out");
     navigate("/onboarding", { replace: true });
   };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
@@ -32,6 +32,29 @@ type RestaurantLoyaltyResponse = {
   programs?: Program[];
 };
 
+function getRedeemedRewardIds(restaurantId?: string): string[] {
+  if (!restaurantId || typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const stored = window.localStorage.getItem(`redeemed-rewards:${restaurantId}`);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRedeemedRewardIds(restaurantId: string | undefined, rewardIds: string[]) {
+  if (!restaurantId || typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(`redeemed-rewards:${restaurantId}`, JSON.stringify(rewardIds));
+}
+
 export default function RestaurantDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -60,6 +83,12 @@ export default function RestaurantDetail() {
     enabled: !!id,
   });
 
+  const [redeemedRewardIds, setRedeemedRewardIds] = useState<string[]>(() => getRedeemedRewardIds(id));
+
+  useEffect(() => {
+    setRedeemedRewardIds(getRedeemedRewardIds(id));
+  }, [id]);
+
   if (isResLoading || isLoyaltyLoading) {
     return <div className="p-5 safe-top flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -82,12 +111,20 @@ export default function RestaurantDetail() {
   const nextReward = rewards.find((r: Reward) => r.stampsRequired > count) || rewards[rewards.length - 1] || { stampsRequired: 10, rewardDescription: "Next reward", _id: "next" };
 
   const onRedeem = (rewardId: string, stampsRequired: number, title: string) => {
+    if (redeemedRewardIds.includes(rewardId)) {
+      toast.info(`${title} has already been redeemed.`);
+      return;
+    }
+
     if (count < stampsRequired) {
       toast.error(`Need ${stampsRequired - count} more stamps`);
       return;
     }
-    // Note: Since there is no redeem endpoint in the backend currently,
-    // we simulate redemption success visually.
+
+    const nextRedeemed = [...redeemedRewardIds, rewardId];
+    setRedeemedRewardIds(nextRedeemed);
+    saveRedeemedRewardIds(id, nextRedeemed);
+
     celebrate();
     toast.success(`${title} redeemed! Show this to staff. 🎉`);
   };
@@ -132,6 +169,7 @@ export default function RestaurantDetail() {
             {rewards.map((reward: any) => {
               const ready = count >= reward.stampsRequired;
               const remaining = Math.max(0, reward.stampsRequired - count);
+              const isRedeemed = redeemedRewardIds.includes(reward._id);
               return (
                 <div
                   key={reward._id || reward.rewardDescription}
@@ -149,25 +187,29 @@ export default function RestaurantDetail() {
                     </p>
                   </div>
                   {ready ? (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button className="rounded-xl tap-scale">Redeem</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="rounded-3xl">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Redeem {reward.rewardDescription}?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will use {reward.stampsRequired} stamps. Show the confirmation to staff at {restaurant.name}.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onRedeem(reward._id, reward.stampsRequired, reward.rewardDescription)} className="rounded-xl">
-                            Yes, redeem
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    isRedeemed ? (
+                      <span className="text-sm font-semibold text-emerald-600">Redeemed</span>
+                    ) : (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button className="rounded-xl tap-scale">Redeem</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-3xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Redeem {reward.rewardDescription}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will use {reward.stampsRequired} stamps. Show the confirmation to staff at {restaurant.name}.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onRedeem(reward._id, reward.stampsRequired, reward.rewardDescription)} className="rounded-xl">
+                              Yes, redeem
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )
                   ) : (
                     <span className="text-sm font-semibold text-muted-foreground">{count}/{reward.stampsRequired}</span>
                   )}

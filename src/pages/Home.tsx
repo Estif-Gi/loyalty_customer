@@ -10,8 +10,7 @@ export default function Home() {
 
   const profile = loyaltyStore((state) => state.user);
 
-  if (!profile ) {
-    navigate("/onboarding", { replace: true });
+  if (!profile) {
     return null;
   }
 
@@ -91,7 +90,7 @@ export default function Home() {
 
               <div className="flex-1 max-w-sm ">
                 <img
-                  src="home%20page%20img.webp"
+                  src="/images/ordering/home-hero.webp"
                   alt="Scan now"
                   className="w-full rounded-[2rem] object-cover"
                 />

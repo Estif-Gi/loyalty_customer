@@ -47,3 +47,12 @@ export function withOpacity(color: string | undefined, opacity: number) {
 
   return trimmed;
 }
+
+/**
+ * Formats a numerical amount with currency (default ETB).
+ */
+export function formatCurrency(amount: number | undefined | null, currency: string = "ETB"): string {
+  const value = typeof amount === "number" && !Number.isNaN(amount) ? amount : 0;
+  return `${value.toFixed(2)} ${currency}`;
+}
+

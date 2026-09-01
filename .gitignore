@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+zip
 
 node_modules
 dist
@@ -16,11 +17,13 @@ dist-ssr
 .env
 .env.*
 !.env.example
-# Editor directories and files
+# Editor and AI Tool directories
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+.claude/
+*.local.json
 *.suo
 *.ntvs*
 *.njsproj

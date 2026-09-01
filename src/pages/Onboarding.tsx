@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrCode, Sparkles, Bell } from "lucide-react";
@@ -7,22 +7,29 @@ import { toast } from "sonner";
 import { loyaltyStore } from "@/lib/store";
 import { registerFcmToken } from "@/hooks/useNotifications";
 import { initSocketConnection } from "@/lib/socket";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { normalizeUser, resolveRedirectPath } from "@/lib/auth";
+import { ENV } from "@/lib/env";
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  // If token exists, skip onboarding
-  const hasToken = !!localStorage.getItem("token");
-  const [step, setStep] = useState(hasToken ? 99 : 0);
+  const location = useLocation();
+  const isAuthenticated = loyaltyStore((state) => state.isAuthenticated);
+  const hasStoredSession = Boolean(localStorage.getItem("token") || localStorage.getItem("accessToken")) && Boolean(localStorage.getItem("user"));
+  const [step, setStep] = useState(0);
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (step === 99) {
-    navigate("/home", { replace: true });
+  useEffect(() => {
+    if (isAuthenticated || (hasStoredSession && localStorage.getItem("user"))) {
+      const from = resolveRedirectPath(location.state?.from);
+      navigate(from, { replace: true });
+    }
+  }, [hasStoredSession, isAuthenticated, location.state, navigate]);
+
+  if (isAuthenticated) {
     return null;
   }
 
@@ -35,7 +42,7 @@ export default function Onboarding() {
     setLoading(true);
     try {
       if (isLogin) {
-        const response = await fetch(`${API_BASE_URL}/users/login`, {
+        const response = await fetch(`${ENV.API_BASE_URL}/users/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone, password }),
@@ -44,8 +51,10 @@ export default function Onboarding() {
         if (!response.ok) throw new Error(data?.message || "Login failed");
 
         localStorage.setItem("token", data.token);
+        localStorage.setItem("accessToken", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user ?? {}));
         if (data.user) {
-          loyaltyStore.getState().setUser(data.user);
+          loyaltyStore.getState().login(data.user, data.token);
           loyaltyStore.getState().setOnboarded(true);
         }
         registerFcmToken().catch((err) =>
@@ -54,7 +63,7 @@ export default function Onboarding() {
         initSocketConnection();
         toast.success("Welcome back!");
       } else {
-        const response = await fetch(`${API_BASE_URL}/users/register`, {
+        const response = await fetch(`${ENV.API_BASE_URL}/users/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, phone, password, role: "customer" }),
@@ -63,8 +72,10 @@ export default function Onboarding() {
         if (!response.ok) throw new Error(data?.message || "Registration failed");
 
         localStorage.setItem("token", data.token);
+        localStorage.setItem("accessToken", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user ?? {}));
         if (data.user) {
-          loyaltyStore.getState().setUser(data.user);
+          loyaltyStore.getState().login(data.user, data.token);
           loyaltyStore.getState().setOnboarded(true);
         }
         registerFcmToken().catch((err) =>
@@ -73,7 +84,8 @@ export default function Onboarding() {
         initSocketConnection();
         toast.success("Account created successfully!");
       }
-      navigate("/home", { replace: true });
+      const from = resolveRedirectPath(location.state?.from);
+      navigate(from, { replace: true });
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
     } finally {
