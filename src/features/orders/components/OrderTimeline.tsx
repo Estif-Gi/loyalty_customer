@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Clock, Utensils } from "lucide-react";
+import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import type { CustomerOrder } from "../types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -9,14 +9,27 @@ interface OrderTimelineProps {
 
 export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
   const steps = [
-    { key: "placed", label: "Order Placed", desc: "Sent to kitchen & assigned waiter" },
-    { key: "served", label: "Served", desc: "Delivered to your table" },
-    { key: "completed", label: "Completed", desc: "Order finished" },
+    { key: "placed", label: "Order Placed", desc: "Order received and assigned to your table." },
+    { key: "served", label: "Served", desc: "Delivered to your table." },
+    { key: "completed", label: "Completed", desc: "Order finished." },
   ];
 
   const currentStep = (order.currentStepKey || "placed").toLowerCase();
+  const systemState = (order.systemState || "").toUpperCase();
+  const isCancelled =
+    systemState === "CANCELLED" ||
+    order.cancellation != null ||
+    currentStep === "cancelled";
+  const isCompleted =
+    !isCancelled &&
+    (systemState === "COMPLETED" || currentStep === "completed");
+
   const getStepIndex = (key: string) => steps.findIndex((s) => s.key === key);
-  const currentIndex = Math.max(0, getStepIndex(currentStep));
+  const currentIndex = isCancelled
+    ? -1
+    : isCompleted
+    ? 2
+    : Math.max(0, getStepIndex(currentStep));
 
   return (
     <div className="bg-card border border-border rounded-3xl p-5 shadow-soft">
@@ -39,18 +52,31 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
         </div>
       </div>
 
+      {/* Cancellation State Banner if cancelled */}
+      {isCancelled && (
+        <div className="flex items-start gap-3 p-3.5 bg-destructive/10 border border-destructive/20 rounded-2xl text-destructive mb-4">
+          <XCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider">Order Cancelled</p>
+            <p className="text-xs text-destructive/90 mt-0.5">
+              {order.cancellation?.reason || "This order was cancelled by the restaurant."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Visual Step Timeline */}
       <div className="space-y-4 my-4">
         {steps.map((step, idx) => {
-          const isDone = idx <= currentIndex;
-          const isCurrent = idx === currentIndex;
+          const isDone = !isCancelled && idx <= currentIndex;
+          const isCurrent = !isCancelled && idx === currentIndex;
 
           return (
             <div key={step.key} className="flex items-start gap-3 relative">
               {idx < steps.length - 1 && (
                 <div
                   className={`absolute left-4 top-8 bottom-0 w-0.5 -mb-4 ${
-                    idx < currentIndex ? "bg-primary" : "bg-border"
+                    !isCancelled && idx < currentIndex ? "bg-primary" : "bg-border"
                   }`}
                 />
               )}
@@ -73,9 +99,15 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
                     {step.label}
                   </p>
                   {isCurrent && (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                      <Clock className="h-3 w-3 animate-spin" /> In Progress
-                    </span>
+                    step.key === "completed" ? (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 className="h-3 w-3" /> Done
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        <Clock className="h-3 w-3 animate-spin" /> In Progress
+                      </span>
+                    )
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>

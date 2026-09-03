@@ -13,37 +13,36 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
   systemState,
   className,
 }) => {
+  const normalizedState = (systemState || "").toUpperCase();
   const normalizedKey = (stepKey || "").toLowerCase();
 
   let label = "Placed";
   let variantClasses = "bg-amber-100 text-amber-800 border-amber-300";
 
-  switch (normalizedKey) {
-    case "placed":
-      label = "Placed";
-      variantClasses = "bg-amber-100 text-amber-800 border-amber-300";
-      break;
-    case "served":
-      label = "Served";
-      variantClasses = "bg-blue-100 text-blue-800 border-blue-300";
-      break;
-    case "completed":
-      label = "Completed";
-      variantClasses = "bg-emerald-100 text-emerald-800 border-emerald-300";
-      break;
-    case "cancelled":
-      label = "Cancelled";
-      variantClasses = "bg-red-100 text-red-800 border-red-300";
-      break;
-    default:
-      if (systemState === "COMPLETED") {
-        label = "Completed";
-        variantClasses = "bg-emerald-100 text-emerald-800 border-emerald-300";
-      } else if (systemState === "IN_PROGRESS") {
+  // Precedence: 1. CANCELLED, 2. COMPLETED, 3. currentStepKey
+  if (normalizedState === "CANCELLED" || normalizedKey === "cancelled") {
+    label = "Cancelled";
+    variantClasses = "bg-red-100 text-red-800 border-red-300";
+  } else if (normalizedState === "COMPLETED" || normalizedKey === "completed") {
+    label = "Completed";
+    variantClasses = "bg-emerald-100 text-emerald-800 border-emerald-300";
+  } else {
+    switch (normalizedKey) {
+      case "served":
         label = "Served";
         variantClasses = "bg-blue-100 text-blue-800 border-blue-300";
-      }
-      break;
+        break;
+      case "placed":
+      default:
+        if (normalizedState === "IN_PROGRESS") {
+          label = "Served";
+          variantClasses = "bg-blue-100 text-blue-800 border-blue-300";
+        } else {
+          label = "Placed";
+          variantClasses = "bg-amber-100 text-amber-800 border-amber-300";
+        }
+        break;
+    }
   }
 
   return (

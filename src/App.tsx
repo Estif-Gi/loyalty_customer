@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { AppProviders } from "@/app/providers/AppProviders";
 import { AuthProvider } from "@/features/auth/components/AuthContext";
+import { CustomerRealtimeManager } from "@/realtime/CustomerRealtimeManager";
 import { PageLoading } from "@/components/feedback/PageLoading";
 import { useAuthStore } from "@/features/auth/store/authStore";
 
@@ -37,6 +38,7 @@ const App = () => {
     <AppProviders>
       <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <AuthProvider>
+          <CustomerRealtimeManager />
           <Suspense fallback={<PageLoading message="Loading..." />}>
             <Routes>
               <Route element={<AppShell />}>

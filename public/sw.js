@@ -33,8 +33,8 @@ messaging.onBackgroundMessage((payload) => {
   if (payload.notification) return;
 
   const notificationTitle = payload.data?.title ?? 'Stamp Loyalty';
-  const defaultNotifIcon = '/icon-512.png';
-  const defaultNotifBadge = '/icon-512.png';
+  const defaultNotifIcon = '/pwa/icon-512.png';
+  const defaultNotifBadge = '/pwa/icon-512.png';
   const notificationOptions = {
     body: payload.data?.body ?? '',
     // allow the server to override icon/badge via payload.data, otherwise
@@ -56,12 +56,13 @@ messaging.onBackgroundMessage((payload) => {
 // ============================================================
 //  PWA Cache – Stamp Loyalty
 // ============================================================
-const CACHE_NAME = 'stamp-loyalty-cache-v3';
+const CACHE_NAME = 'stamp-loyalty-cache-v4';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon-512.png',
+  '/pwa/icon-192.png',
+  '/pwa/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -88,10 +89,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin, non-GET, and all API calls to ensure ordering/sessions remain network-authoritative
+  // Skip cross-origin, non-GET, API calls, and Socket.IO to ensure ordering/sessions remain network-authoritative
   if (!event.request.url.startsWith(self.location.origin)) return;
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/')) return;
+  if (event.request.url.includes('/socket.io/')) return;
 
   // Stale-while-revalidate for static assets
   event.respondWith(

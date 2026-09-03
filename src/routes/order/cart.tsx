@@ -141,6 +141,20 @@ function CartPageContent() {
         </div>
       )}
 
+      {/* Deterministic Rejection Alert (4xx errors) */}
+      {lastError && checkoutStatus === "rejected" && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-2xl p-4 mb-4 text-xs space-y-1">
+          <p className="font-bold flex items-center gap-1.5">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <span>Order Not Placed</span>
+          </p>
+          <p>{lastError}</p>
+          <p className="text-[11px] text-destructive/80 opacity-90">
+            Please resolve the issue before submitting again.
+          </p>
+        </div>
+      )}
+
       {/* Fixed Checkout Bar */}
       <div className="fixed bottom-0 inset-x-0 z-40 p-4 safe-bottom bg-gradient-to-t from-background via-background/90 to-transparent">
         <div className="max-w-md mx-auto">

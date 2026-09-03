@@ -23,6 +23,7 @@ export function usePlaceOrder() {
     getOrCreateKey,
     setSubmitting,
     setUncertain,
+    setRejected,
     setSuccess,
     reset: resetCheckout,
   } = useCheckoutStore();
@@ -92,12 +93,14 @@ export function usePlaceOrder() {
       setIsCapturingLocation(false);
       const errorMessage = getApiErrorMessage(err);
 
-      // Ambiguous network failure vs deterministic business rejection
+      // Deterministic client/business rejection (400, 401, 403, 404, 422) vs ambiguous network/gateway failure
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-        // Client/Business error: keep or reset as appropriate
-        setUncertain(errorMessage);
+        // Deterministic rejection: server received request and rejected it based on business rules
+        // Do NOT mark as uncertain; do not offer safe retry with the same key
+        setRejected(errorMessage);
       } else {
-        // Network timeout / 500: keep same idempotency key for safe retry
+        // Network timeout, connection drop, or ambiguous 5xx server gateway error
+        // Request may or may not have reached server: keep same idempotency key for safe retry
         setUncertain(errorMessage);
       }
 
@@ -113,6 +116,7 @@ export function usePlaceOrder() {
     navigate,
     queryClient,
     session,
+    setRejected,
     setSubmitting,
     setSuccess,
     setUncertain,

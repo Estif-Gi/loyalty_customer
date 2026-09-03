@@ -11,7 +11,8 @@ export function useCustomerOrders(status?: "active" | "history") {
     queryKey: queryKeys.customerOrders(status),
     queryFn: () => ordersApi.getMyOrders(status),
     enabled: isInitialized && isAuthenticated,
-    refetchInterval: status === "active" ? 1000 * 15 : false, // Poll active orders every 15s
+    // Socket.IO provides instant updates; 30-second fallback serves as safety net
+    refetchInterval: status === "active" ? 1000 * 30 : false,
   });
 
   return {
@@ -32,10 +33,20 @@ export function useCustomerOrder(orderId?: string) {
     enabled: isInitialized && isAuthenticated && Boolean(orderId),
     refetchInterval: (q) => {
       const order = q.state.data;
-      if (order && order.systemState !== "COMPLETED" && order.systemState !== "CANCELLED") {
-        return 1000 * 10; // Poll active order every 10s
+      // If not yet loaded, use 30s fallback
+      if (!order) return 1000 * 30;
+
+      const stepKey = (order.currentStepKey || "").toLowerCase();
+      const isFinished =
+        order.systemState === "COMPLETED" ||
+        order.systemState === "CANCELLED" ||
+        stepKey === "completed" ||
+        stepKey === "cancelled";
+
+      if (isFinished) {
+        return false; // Completed/cancelled orders do not poll
       }
-      return false;
+      return 1000 * 30; // 30s fallback polling for active order
     },
   });
 

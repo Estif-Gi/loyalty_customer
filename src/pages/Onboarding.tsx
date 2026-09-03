@@ -6,7 +6,6 @@ import { QrCode, Sparkles, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { loyaltyStore } from "@/lib/store";
 import { registerFcmToken } from "@/hooks/useNotifications";
-import { initSocketConnection } from "@/lib/socket";
 import { normalizeUser, resolveRedirectPath } from "@/lib/auth";
 import { ENV } from "@/lib/env";
 
@@ -60,7 +59,6 @@ export default function Onboarding() {
         registerFcmToken().catch((err) =>
           console.warn("[Notifications] registerFcmToken failed:", err)
         );
-        initSocketConnection();
         toast.success("Welcome back!");
       } else {
         const response = await fetch(`${ENV.API_BASE_URL}/users/register`, {
@@ -81,13 +79,12 @@ export default function Onboarding() {
         registerFcmToken().catch((err) =>
           console.warn("[Notifications] registerFcmToken failed:", err)
         );
-        initSocketConnection();
         toast.success("Account created successfully!");
       }
       const from = resolveRedirectPath(location.state?.from);
       navigate(from, { replace: true });
-    } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {
       setLoading(false);
     }
