@@ -26,7 +26,7 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
   const isServed =
     !isCancelled &&
     !isCompleted &&
-    (currentStep === "served" || systemState === "IN_PROGRESS" || Boolean(order.service?.servedAt));
+    (currentStep === "served" || Boolean(order.service?.servedAt));
 
   const getStepIndex = (key: string) => steps.findIndex((s) => s.key === key);
   const currentIndex = isCancelled
@@ -137,7 +137,12 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                        <Clock className="h-3 w-3 animate-spin" /> In Progress
+                        <Clock className="h-3 w-3 animate-spin" />{" "}
+                        {systemState === "IN_PROGRESS" ||
+                        currentStep === "preparing" ||
+                        currentStep === "in_progress"
+                          ? "Preparing"
+                          : "In Progress"}
                       </span>
                     )
                   )}

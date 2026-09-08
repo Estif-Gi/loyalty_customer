@@ -32,11 +32,16 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
         label = "Served";
         variantClasses = "bg-blue-100 text-blue-800 border-blue-300";
         break;
+      case "preparing":
+      case "in_progress":
+        label = "Preparing";
+        variantClasses = "bg-amber-100 text-amber-800 border-amber-300";
+        break;
       case "placed":
       default:
         if (normalizedState === "IN_PROGRESS") {
-          label = "Served";
-          variantClasses = "bg-blue-100 text-blue-800 border-blue-300";
+          label = "Preparing";
+          variantClasses = "bg-amber-100 text-amber-800 border-amber-300";
         } else {
           label = "Placed";
           variantClasses = "bg-amber-100 text-amber-800 border-amber-300";

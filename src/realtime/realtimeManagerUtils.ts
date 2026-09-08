@@ -162,7 +162,7 @@ export function processOrderCreated(
 export function processOrderUpdated(
   payload: OrderUpdatedPayload,
   debouncer: RealtimeQueryDebouncer,
-  notifyToast?: (message: string, type: "served" | "completed" | "updated") => void
+  notifyToast?: (message: string, type: "served" | "completed" | "preparing" | "updated") => void
 ): boolean {
   if (payload?.eventId && isEventDuplicate(payload.eventId)) return false;
 
@@ -257,6 +257,8 @@ export function processOrderUpdated(
       notifyToast(`${prefix} is served!`, "served");
     } else if (stepKey === "completed" || state === "COMPLETED") {
       notifyToast(`${prefix} is completed!`, "completed");
+    } else if (stepKey === "preparing" || (state === "IN_PROGRESS" && stepKey !== "served")) {
+      notifyToast(`${prefix} is being prepared!`, "preparing");
     }
   }
 

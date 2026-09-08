@@ -87,6 +87,10 @@ export const CustomerRealtimeManager: React.FC = () => {
           toast.success("Order Completed! ✨", {
             description: "Thank you for dining with us.",
           });
+        } else if (type === "preparing") {
+          toast.info("Preparing Your Order 🍳", {
+            description: "The kitchen is actively preparing your food.",
+          });
         } else {
           toast.info(msg);
         }

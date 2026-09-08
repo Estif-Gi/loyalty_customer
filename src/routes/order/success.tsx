@@ -45,7 +45,15 @@ export default function OrderSuccessPage() {
     order?.cancellation != null ||
     stepKey === "cancelled";
   const isCompleted = !isCancelled && (systemState === "COMPLETED" || stepKey === "completed");
-  const isServed = !isCancelled && !isCompleted && stepKey === "served";
+  const isServed =
+    !isCancelled &&
+    !isCompleted &&
+    (stepKey === "served" || Boolean(order?.service?.servedAt));
+  const isPreparing =
+    !isCancelled &&
+    !isCompleted &&
+    !isServed &&
+    (stepKey === "preparing" || stepKey === "in_progress" || systemState === "IN_PROGRESS");
 
   let headerSubtitle = "Order Received";
   let headerTitle = "Order Placed!";
@@ -63,6 +71,10 @@ export default function OrderSuccessPage() {
     headerSubtitle = "Order Served";
     headerTitle = "Food at Your Table!";
     headerDescription = "Your order has been served to your table. Enjoy!";
+  } else if (isPreparing) {
+    headerSubtitle = "In Kitchen";
+    headerTitle = "Preparing Your Order!";
+    headerDescription = "The kitchen is currently preparing your meal.";
   }
 
   return (

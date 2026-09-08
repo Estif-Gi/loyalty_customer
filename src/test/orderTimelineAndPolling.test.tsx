@@ -200,4 +200,66 @@ describe("OrderTimeline UI & Polling Rules", () => {
     // Even if navigation state had "placed", the resolved order is "served"
     expect(resolvedOrder.currentStepKey).not.toBe(staleNavigationOrder.currentStepKey);
   });
+
+  it("10. IN_PROGRESS systemState with PLACED step renders Preparing, NOT Served", () => {
+    const { unmount } = render(
+      <OrderStatusBadge stepKey="placed" systemState="IN_PROGRESS" />
+    );
+
+    expect(screen.getByText("Preparing")).toBeInTheDocument();
+    expect(screen.queryByText("Served")).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <OrderTimeline
+        order={{ ...baseOrder, currentStepKey: "placed", systemState: "IN_PROGRESS" }}
+      />
+    );
+
+    // Timeline should show Preparing indicator on Step 1
+    expect(screen.getByText("Preparing")).toBeInTheDocument();
+    // Step 2 should not show "Food Served"
+    expect(screen.queryByText(/Food Served/i)).not.toBeInTheDocument();
+  });
+
+  it("11. PREPARING stepKey renders Preparing badge and keeps timeline at Step 1", () => {
+    const { unmount } = render(
+      <OrderStatusBadge stepKey="preparing" systemState="IN_PROGRESS" />
+    );
+
+    expect(screen.getByText("Preparing")).toBeInTheDocument();
+    expect(screen.queryByText("Served")).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <OrderTimeline
+        order={{ ...baseOrder, currentStepKey: "preparing", systemState: "IN_PROGRESS" }}
+      />
+    );
+
+    expect(screen.getByText("Preparing")).toBeInTheDocument();
+    expect(screen.queryByText(/Food Served/i)).not.toBeInTheDocument();
+  });
+
+  it("12. ONLY served stepKey or servedAt sets Served in OrderStatusBadge and OrderTimeline", () => {
+    const { unmount } = render(
+      <OrderStatusBadge stepKey="served" systemState="IN_PROGRESS" />
+    );
+    expect(screen.getByText("Served")).toBeInTheDocument();
+    unmount();
+
+    render(
+      <OrderTimeline
+        order={{
+          ...baseOrder,
+          currentStepKey: "served",
+          systemState: "IN_PROGRESS",
+          service: { servedAt: new Date().toISOString() },
+        }}
+      />
+    );
+
+    expect(screen.getByText("Served")).toBeInTheDocument();
+    expect(screen.getByText(/Food Served/i)).toBeInTheDocument();
+  });
 });
