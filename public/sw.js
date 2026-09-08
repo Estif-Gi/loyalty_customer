@@ -33,8 +33,8 @@ messaging.onBackgroundMessage((payload) => {
   if (payload.notification) return;
 
   const notificationTitle = payload.data?.title ?? 'Stamp Loyalty';
-  const defaultNotifIcon = '/pwa/icon-512.png';
-  const defaultNotifBadge = '/pwa/icon-512.png';
+  const defaultNotifIcon = '/images/branding/logo.png';
+  const defaultNotifBadge = '/images/branding/logo.png';
   const notificationOptions = {
     body: payload.data?.body ?? '',
     // allow the server to override icon/badge via payload.data, otherwise
@@ -56,13 +56,12 @@ messaging.onBackgroundMessage((payload) => {
 // ============================================================
 //  PWA Cache – Stamp Loyalty
 // ============================================================
-const CACHE_NAME = 'stamp-loyalty-cache-v4';
+const CACHE_NAME = 'stamp-loyalty-cache-v5';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/pwa/icon-192.png',
-  '/pwa/icon-512.png',
+  '/images/branding/logo.png',
 ];
 
 self.addEventListener('install', (event) => {

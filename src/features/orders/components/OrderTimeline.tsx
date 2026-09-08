@@ -31,16 +31,38 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
     ? 2
     : Math.max(0, getStepIndex(currentStep));
 
+  const restaurantName =
+    typeof order.restaurant === "object" && order.restaurant !== null
+      ? order.restaurant.name
+      : null;
+
+  const tableName =
+    typeof order.table === "object" && order.table !== null
+      ? order.table.name || order.table.code
+      : null;
+
   return (
     <div className="bg-card border border-border rounded-3xl p-5 shadow-soft">
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/60">
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-            Order Number
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+              Order Number
+            </p>
+            {tableName && (
+              <span className="text-[11px] font-semibold bg-secondary px-2 py-0.5 rounded-full text-foreground">
+                {tableName}
+              </span>
+            )}
+          </div>
           <p className="font-display text-2xl font-bold text-foreground mt-0.5">
             #{order.orderNumber}
           </p>
+          {restaurantName && (
+            <p className="text-xs font-medium text-muted-foreground mt-0.5 truncate">
+              {restaurantName}
+            </p>
+          )}
         </div>
         <div className="text-right">
           <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">

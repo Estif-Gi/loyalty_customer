@@ -110,10 +110,10 @@ function CartPageContent() {
           <span className="text-muted-foreground">Estimated Subtotal</span>
           <span className="font-semibold text-foreground">{formatCurrency(estimatedSubtotal)}</span>
         </div>
-        <div className="flex items-center justify-between text-sm">
+        {/* <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Service & Taxes</span>
           <span className="text-xs text-muted-foreground">Calculated by server</span>
-        </div>
+        </div> */}
         <div className="pt-2.5 border-t border-border/60 flex items-center justify-between">
           <span className="font-display text-lg font-bold text-foreground">Estimated Total</span>
           <span className="font-display text-2xl font-bold text-primary">

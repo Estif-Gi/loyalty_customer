@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
+import { ActiveOrderHeaderButton } from "./ActiveOrderHeaderButton";
 import { useNotifications } from "@/hooks/useNotifications";
 
 export function AppShell() {
@@ -14,7 +15,8 @@ export function AppShell() {
     location.pathname.startsWith("/order/");
 
   return (
-    <div className="min-h-dvh gradient-warm flex flex-col">
+    <div className="min-h-dvh gradient-warm flex flex-col relative">
+      <ActiveOrderHeaderButton />
       <main className={`flex-1 mx-auto w-full max-w-md ${hideNav ? "pb-4" : "pb-28"}`}>
         <div key={location.pathname} className={location.pathname === "/scan" ? "h-full" : "animate-fade-in-up"}>
           <Outlet />

@@ -12,6 +12,7 @@ import { useCartStore } from "@/features/cart/store/cartStore";
 import { PageLoading } from "@/components/feedback/PageLoading";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { OfflineState } from "@/components/feedback/OfflineState";
+import { useCustomerOrders } from "@/features/orders/hooks/useCustomerOrders";
 import { cn, withOpacity } from "@/lib/utils";
 
 function OrderMenuContent() {
@@ -42,6 +43,9 @@ function OrderMenuContent() {
 
   if (!session) return null;
 
+  const { orders: activeOrders } = useCustomerOrders("active");
+  const hasActiveOrders = activeOrders.length > 0;
+
   const themeColor = restaurant?.themeColor || session.restaurant.themeColor || "#b85a2a";
   const restaurantName = restaurant?.name || session.restaurant.name || "Restaurant";
   const tableName = session.table.name || `Table ${session.table.code}`;
@@ -69,11 +73,18 @@ function OrderMenuContent() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/order/history")}
+            onClick={() => navigate(hasActiveOrders ? "/order/history?tab=active" : "/order/history")}
             className="bg-white/20 hover:bg-white/30 text-white rounded-full px-3.5 h-9 text-xs font-semibold backdrop-blur tap-scale flex items-center gap-1.5"
           >
-            <Clock className="h-3.5 w-3.5" />
-            <span>My Orders</span>
+            {hasActiveOrders ? (
+              <span className="relative flex h-2 w-2 mr-0.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+            ) : (
+              <Clock className="h-3.5 w-3.5" />
+            )}
+            <span>{hasActiveOrders ? "Active Order" : "My Orders"}</span>
           </Button>
         </div>
 

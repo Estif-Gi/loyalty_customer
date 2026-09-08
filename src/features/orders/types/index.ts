@@ -34,14 +34,14 @@ export interface CustomerOrder {
   id: string;
   _id?: string;
   orderNumber: string;
-  restaurant: string | { _id?: string; id?: string; name?: string };
+  restaurant: string | { _id?: string; id?: string; name?: string; location?: string; phone?: string };
   table: string | { _id?: string; id?: string; name?: string; code?: string };
   items: OrderSnapshotItem[];
   pricing: OrderPricing;
   currentStepKey: OrderWorkflowStep | string;
   systemState: OrderSystemState | string;
   customerNotes?: string;
-  timeline: TimelineEntry[];
+  timeline?: TimelineEntry[];
   service?: {
     waiter?: string;
     assignedAt?: string;

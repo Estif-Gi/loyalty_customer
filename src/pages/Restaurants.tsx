@@ -90,10 +90,10 @@ export default function Restaurants() {
                           <p className="font-display text-xl leading-tight">{l.name || "Unknown Spot"}</p>
                           <p className="text-xs text-muted-foreground mb-2">Your loyalty spot</p>
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                            {/* <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                               <div className="h-full gradient-primary transition-all" style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="text-xs font-semibold text-muted-foreground">{count}/{goal}</span>
+                            </div> */}
+                            {/* <span className="text-xs font-semibold text-muted-foreground">{count}/{goal}</span> */}
                           </div>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />

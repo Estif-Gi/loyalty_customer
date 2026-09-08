@@ -4,12 +4,16 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ordersApi } from "../api/ordersApi";
 import type { CustomerOrder } from "../types";
 
-export function useCustomerOrders(status?: "active" | "history") {
+export function useCustomerOrders(
+  status?: "active" | "history",
+  page: number = 1,
+  limit: number = 10
+) {
   const { isAuthenticated, isInitialized } = useAuth();
 
   const query = useQuery<CustomerOrder[]>({
-    queryKey: queryKeys.customerOrders(status),
-    queryFn: () => ordersApi.getMyOrders(status),
+    queryKey: queryKeys.customerOrders(status, page, limit),
+    queryFn: () => ordersApi.getMyOrders(status, page, limit),
     enabled: isInitialized && isAuthenticated,
     // Socket.IO provides instant updates; 30-second fallback serves as safety net
     refetchInterval: status === "active" ? 1000 * 30 : false,
