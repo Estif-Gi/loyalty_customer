@@ -27,8 +27,13 @@ export const queryKeys = {
   activeOrderSession: () => ["active-order-session"] as const,
   restaurant: (restaurantId?: string) => ["restaurant", restaurantId] as const,
   menu: (restaurantId?: string) => ["menu", restaurantId] as const,
-  customerOrders: (status?: "active" | "history", page?: number, limit?: number) =>
-    ["customer-orders", status, page, limit] as const,
+  customerOrders: (status?: "active" | "history", page?: number, limit?: number) => {
+    const keys: (string | number)[] = ["customer-orders"];
+    if (status !== undefined) keys.push(status);
+    if (page !== undefined) keys.push(page);
+    if (limit !== undefined) keys.push(limit);
+    return keys as readonly (string | number)[];
+  },
   order: (orderId?: string) => ["order", orderId] as const,
   profile: () => ["profile"] as const,
   loyalty: (restaurantId?: string) => ["loyalty", restaurantId] as const,

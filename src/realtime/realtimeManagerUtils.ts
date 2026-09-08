@@ -161,7 +161,8 @@ export function processOrderCreated(
 
 export function processOrderUpdated(
   payload: OrderUpdatedPayload,
-  debouncer: RealtimeQueryDebouncer
+  debouncer: RealtimeQueryDebouncer,
+  notifyToast?: (message: string, type: "served" | "completed" | "updated") => void
 ): boolean {
   if (payload?.eventId && isEventDuplicate(payload.eventId)) return false;
 
@@ -217,18 +218,28 @@ export function processOrderUpdated(
         return [orderToInsert, ...old];
       });
     } else {
-      queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("active"), (old = []) => {
-        return old.map((o) => {
-          if ((o.id || o._id) !== orderId) return o;
-          return {
-            ...o,
-            ...(fullOrder || {}),
-            currentStepKey: data?.currentStepKey || o.currentStepKey,
-            systemState: data?.systemState || o.systemState,
-            updatedAt: data?.updatedAt || o.updatedAt,
-          };
-        });
-      });
+      queryClient.setQueriesData<CustomerOrder[]>(
+        { predicate: (query) => query.queryKey[0] === "customer-orders" },
+        (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((o) => {
+            const match = (o.id && o.id === orderId) || (o._id && o._id === orderId);
+            if (!match) return o;
+            return {
+              ...o,
+              ...(fullOrder || {}),
+              currentStepKey: data?.currentStepKey || stepKey || o.currentStepKey,
+              systemState: data?.systemState || state || o.systemState,
+              service: {
+                ...(o.service || {}),
+                ...(fullOrder?.service || {}),
+                servedAt: stepKey === "served" ? (data?.updatedAt || new Date().toISOString()) : o.service?.servedAt,
+              },
+              updatedAt: data?.updatedAt || o.updatedAt || new Date().toISOString(),
+            };
+          });
+        }
+      );
     }
 
     debouncer.queueOrder(orderId);
@@ -238,6 +249,17 @@ export function processOrderUpdated(
   if (isTerminal) {
     debouncer.queueHistoryOrders();
   }
+
+  if (notifyToast) {
+    const orderNum = (data as any)?.orderNumber || fullOrder?.orderNumber;
+    const prefix = orderNum ? `Order #${orderNum}` : "Your order";
+    if (stepKey === "served") {
+      notifyToast(`${prefix} is served!`, "served");
+    } else if (stepKey === "completed" || state === "COMPLETED") {
+      notifyToast(`${prefix} is completed!`, "completed");
+    }
+  }
+
   return true;
 }
 

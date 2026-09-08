@@ -15,8 +15,8 @@ export function useCustomerOrders(
     queryKey: queryKeys.customerOrders(status, page, limit),
     queryFn: () => ordersApi.getMyOrders(status, page, limit),
     enabled: isInitialized && isAuthenticated,
-    // Socket.IO provides instant updates; 30-second fallback serves as safety net
-    refetchInterval: status === "active" ? 1000 * 30 : false,
+    // Socket.IO provides instant updates; 10-second fallback serves as safety net
+    refetchInterval: status === "active" ? 1000 * 10 : false,
   });
 
   return {

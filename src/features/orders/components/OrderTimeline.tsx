@@ -23,12 +23,18 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
   const isCompleted =
     !isCancelled &&
     (systemState === "COMPLETED" || currentStep === "completed");
+  const isServed =
+    !isCancelled &&
+    !isCompleted &&
+    (currentStep === "served" || systemState === "IN_PROGRESS" || Boolean(order.service?.servedAt));
 
   const getStepIndex = (key: string) => steps.findIndex((s) => s.key === key);
   const currentIndex = isCancelled
     ? -1
     : isCompleted
     ? 2
+    : isServed
+    ? 1
     : Math.max(0, getStepIndex(currentStep));
 
   const restaurantName =
@@ -124,6 +130,10 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
                     step.key === "completed" ? (
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
                         <CheckCircle2 className="h-3 w-3" /> Done
+                      </span>
+                    ) : step.key === "served" ? (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 className="h-3 w-3" /> Food Served &bull; In Progress
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">

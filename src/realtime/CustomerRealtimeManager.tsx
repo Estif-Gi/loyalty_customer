@@ -78,7 +78,19 @@ export const CustomerRealtimeManager: React.FC = () => {
 
     // order:updated -> reads orderId, currentStepKey, systemState from payload.data
     const handleOrderUpdated = (payload: OrderUpdatedPayload) => {
-      processOrderUpdated(payload, debouncer);
+      processOrderUpdated(payload, debouncer, (msg, type) => {
+        if (type === "served") {
+          toast.success("Order Served! 🍽️", {
+            description: "Your food has arrived at your table. Enjoy your meal!",
+          });
+        } else if (type === "completed") {
+          toast.success("Order Completed! ✨", {
+            description: "Thank you for dining with us.",
+          });
+        } else {
+          toast.info(msg);
+        }
+      });
     };
 
     // order:cancelled -> reads orderId, orderNumber from payload.data
