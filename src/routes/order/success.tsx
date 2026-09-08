@@ -77,6 +77,19 @@ export default function OrderSuccessPage() {
     headerDescription = "The kitchen is currently preparing your meal.";
   }
 
+  console.log("🎉 [OrderSuccessPage] Status:", {
+    orderId: order?.id || order?._id,
+    orderNumber: order?.orderNumber,
+    currentStepKey: order?.currentStepKey,
+    systemState: order?.systemState,
+    isPreparing,
+    isServed,
+    isCompleted,
+    isCancelled,
+    headerTitle,
+    headerSubtitle,
+  });
+
   return (
     <div className="min-h-dvh pb-20 px-5 pt-8 safe-top animate-fade-in">
       {/* Dynamic Status Header */}

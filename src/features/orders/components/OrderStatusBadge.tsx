@@ -50,6 +50,12 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
     }
   }
 
+  console.log("🏷️ [OrderStatusBadge] Status:", {
+    stepKey,
+    systemState,
+    label,
+  });
+
   return (
     <span
       className={cn(

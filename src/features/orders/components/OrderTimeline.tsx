@@ -10,7 +10,7 @@ interface OrderTimelineProps {
 export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
   const steps = [
     { key: "placed", label: "Order Placed", desc: "Order received and assigned to your table." },
-    { key: "served", label: "Served", desc: "Delivered to your table." },
+    { key: "serving", label: "Served", desc: "Delivered to your table." },
     { key: "completed", label: "Completed", desc: "Order finished." },
   ];
 
@@ -46,6 +46,17 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
     typeof order.table === "object" && order.table !== null
       ? order.table.name || order.table.code
       : null;
+
+  console.log("⏱️ [OrderTimeline] Order Status:", {
+    orderNumber: order.orderNumber,
+    currentStepKey: order.currentStepKey,
+    systemState: order.systemState,
+    isServed,
+    isCompleted,
+    isCancelled,
+    activeStepIndex: currentIndex,
+    servedAt: order.service?.servedAt,
+  });
 
   return (
     <div className="bg-card border border-border rounded-3xl p-5 shadow-soft">

@@ -73,11 +73,24 @@ export const CustomerRealtimeManager: React.FC = () => {
 
     // order:created -> reads order from payload.data.order
     const handleOrderCreated = (payload: OrderCreatedPayload) => {
+      console.log("🆕 [Realtime] order:created received:", {
+        orderId: payload?.data?.order?.id || (payload?.data?.order as any)?._id,
+        orderNumber: payload?.data?.order?.orderNumber,
+        step: payload?.data?.order?.currentStepKey,
+        state: payload?.data?.order?.systemState,
+      });
       processOrderCreated(payload, debouncer);
     };
 
     // order:updated -> reads orderId, currentStepKey, systemState from payload.data
     const handleOrderUpdated = (payload: OrderUpdatedPayload) => {
+      console.log("🔔 [Realtime] order:updated received:", {
+        orderId: payload?.data?.orderId || payload?.data?.order?.id || (payload?.data?.order as any)?._id,
+        orderNumber: (payload?.data as any)?.orderNumber || payload?.data?.order?.orderNumber,
+        currentStepKey: payload?.data?.currentStepKey || payload?.data?.order?.currentStepKey,
+        systemState: payload?.data?.systemState || payload?.data?.order?.systemState,
+        servedAt: payload?.data?.order?.service?.servedAt,
+      });
       processOrderUpdated(payload, debouncer, (msg, type) => {
         if (type === "served") {
           toast.success("Order Served! 🍽️", {
@@ -99,6 +112,10 @@ export const CustomerRealtimeManager: React.FC = () => {
 
     // order:cancelled -> reads orderId, orderNumber from payload.data
     const handleOrderCancelled = (payload: OrderCancelledPayload) => {
+      console.log("❌ [Realtime] order:cancelled received:", {
+        orderId: payload?.data?.orderId || payload?.data?.order?.id,
+        reason: payload?.data?.reason,
+      });
       processOrderCancelled(payload, debouncer, (msg) => toast.info(msg));
     };
 
