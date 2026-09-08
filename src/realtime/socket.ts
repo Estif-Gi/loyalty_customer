@@ -51,7 +51,7 @@ function createSocketClient(token: string): Socket {
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 10000,
-    transports: ["polling", "websocket"], // Allow polling -> websocket upgrade
+    transports: ["websocket"], // Direct WebSocket connection, no polling latency
   });
 
   // Isolated legacy profile synchronization listener

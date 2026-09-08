@@ -28,8 +28,10 @@ export interface RealtimeEnvelope<T> {
   data: T;
 }
 
+import type { CustomerOrder } from "@/features/orders/types";
+
 export interface OrderCreatedData {
-  order?: {
+  order?: CustomerOrder | {
     id?: string;
     _id?: string;
     orderNumber?: string;
@@ -50,6 +52,7 @@ export interface OrderUpdatedData {
   currentStepKey?: string;
   systemState?: string;
   updatedAt?: string;
+  order?: CustomerOrder;
 }
 
 export interface OrderCancelledData {
@@ -59,6 +62,7 @@ export interface OrderCancelledData {
   systemState?: string;
   reason?: string;
   cancelledAt?: string;
+  order?: CustomerOrder;
 }
 
 export interface OrdersInvalidateData {

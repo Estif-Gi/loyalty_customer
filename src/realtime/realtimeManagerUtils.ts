@@ -7,6 +7,7 @@ import type {
   OrderCancelledPayload,
   OrdersInvalidatePayload,
 } from "./realtimeEvents";
+import type { CustomerOrder } from "@/features/orders/types";
 
 // In-memory deduplication set capped at 200 items (not persisted)
 const MAX_SEEN_EVENTS = 200;
@@ -41,6 +42,10 @@ export class RealtimeQueryDebouncer {
 
   constructor(queryClient: QueryClient) {
     this.queryClient = queryClient;
+  }
+
+  public getQueryClient(): QueryClient {
+    return this.queryClient;
   }
 
   public queueActiveOrders(): void {
@@ -117,10 +122,37 @@ export function processOrderCreated(
 ): boolean {
   if (payload?.eventId && isEventDuplicate(payload.eventId)) return false;
 
-  debouncer.queueActiveOrders();
+  const queryClient = debouncer.getQueryClient();
+  const rawOrder = payload?.data?.order;
+  const orderId = rawOrder?.id || (rawOrder as any)?._id;
 
-  const order = payload?.data?.order;
-  const orderId = order?.id || order?._id;
+  if (rawOrder && orderId) {
+    const order = rawOrder as CustomerOrder;
+
+    // 1. Immediately write to specific order cache
+    queryClient.setQueryData<CustomerOrder>(queryKeys.order(orderId), order);
+
+    // 2. Immediately prepend to active customer orders cache
+    queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("active"), (old = []) => {
+      const exists = old.some((o) => (o.id || o._id) === orderId);
+      if (exists) {
+        return old.map((o) => ((o.id || o._id) === orderId ? { ...o, ...order } : o));
+      }
+      return [order, ...old];
+    });
+
+    // 3. Immediately update root customer orders cache
+    queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders(), (old = []) => {
+      const exists = old.some((o) => (o.id || o._id) === orderId);
+      if (exists) {
+        return old.map((o) => ((o.id || o._id) === orderId ? { ...o, ...order } : o));
+      }
+      return [order, ...old];
+    });
+  }
+
+  // Queue background silent reconciliation as safety net
+  debouncer.queueActiveOrders();
   if (orderId) {
     debouncer.queueOrder(orderId);
   }
@@ -133,21 +165,77 @@ export function processOrderUpdated(
 ): boolean {
   if (payload?.eventId && isEventDuplicate(payload.eventId)) return false;
 
+  const queryClient = debouncer.getQueryClient();
   const data = payload?.data;
-  const orderId = data?.orderId;
-  if (orderId) {
-    debouncer.queueOrder(orderId);
-  }
-  debouncer.queueActiveOrders();
+  const orderId = data?.orderId || (data?.order as any)?.id || (data?.order as any)?._id;
+  const fullOrder = data?.order as CustomerOrder | undefined;
 
-  const stepKey = (data?.currentStepKey || "").toLowerCase();
-  const state = (data?.systemState || "").toUpperCase();
-  if (
+  const stepKey = (data?.currentStepKey || fullOrder?.currentStepKey || "").toLowerCase();
+  const state = (data?.systemState || fullOrder?.systemState || "").toUpperCase();
+  const isTerminal =
     stepKey === "completed" ||
     stepKey === "cancelled" ||
     state === "COMPLETED" ||
-    state === "CANCELLED"
-  ) {
+    state === "CANCELLED";
+
+  if (orderId) {
+    // 1. Immediately patch specific order cache
+    queryClient.setQueryData<CustomerOrder>(queryKeys.order(orderId), (old) => {
+      if (fullOrder) {
+        return { ...(old || {}), ...fullOrder } as CustomerOrder;
+      }
+      if (!old) return old;
+      return {
+        ...old,
+        currentStepKey: data?.currentStepKey || old.currentStepKey,
+        systemState: data?.systemState || old.systemState,
+        updatedAt: data?.updatedAt || new Date().toISOString(),
+      };
+    });
+
+    // 2. Update active and history orders lists
+    if (isTerminal) {
+      let movedOrder: CustomerOrder | null = null;
+      queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("active"), (old = []) => {
+        const target = old.find((o) => (o.id || o._id) === orderId);
+        if (target) movedOrder = target;
+        return old.filter((o) => (o.id || o._id) !== orderId);
+      });
+
+      queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("history"), (old = []) => {
+        const orderToInsert = fullOrder || (movedOrder ? {
+          ...movedOrder,
+          currentStepKey: data?.currentStepKey || (movedOrder as any).currentStepKey,
+          systemState: data?.systemState || (movedOrder as any).systemState,
+        } : null);
+
+        if (!orderToInsert) return old;
+        const exists = old.some((o) => (o.id || o._id) === orderId);
+        if (exists) {
+          return old.map((o) => ((o.id || o._id) === orderId ? { ...o, ...orderToInsert } : o));
+        }
+        return [orderToInsert, ...old];
+      });
+    } else {
+      queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("active"), (old = []) => {
+        return old.map((o) => {
+          if ((o.id || o._id) !== orderId) return o;
+          return {
+            ...o,
+            ...(fullOrder || {}),
+            currentStepKey: data?.currentStepKey || o.currentStepKey,
+            systemState: data?.systemState || o.systemState,
+            updatedAt: data?.updatedAt || o.updatedAt,
+          };
+        });
+      });
+    }
+
+    debouncer.queueOrder(orderId);
+  }
+
+  debouncer.queueActiveOrders();
+  if (isTerminal) {
     debouncer.queueHistoryOrders();
   }
   return true;
@@ -160,11 +248,57 @@ export function processOrderCancelled(
 ): boolean {
   if (payload?.eventId && isEventDuplicate(payload.eventId)) return false;
 
+  const queryClient = debouncer.getQueryClient();
   const data = payload?.data;
-  const orderId = data?.orderId;
+  const orderId = data?.orderId || (data?.order as any)?.id || (data?.order as any)?._id;
+  const fullOrder = data?.order as CustomerOrder | undefined;
+
   if (orderId) {
+    // 1. Immediately mark specific order as cancelled
+    queryClient.setQueryData<CustomerOrder>(queryKeys.order(orderId), (old) => {
+      if (fullOrder) return { ...(old || {}), ...fullOrder } as CustomerOrder;
+      if (!old) return old;
+      return {
+        ...old,
+        systemState: "CANCELLED",
+        currentStepKey: data?.currentStepKey || "cancelled",
+        cancellation: {
+          reason: data?.reason || "Cancelled by staff override",
+          cancelledAt: new Date().toISOString(),
+        } as any,
+      };
+    });
+
+    // 2. Remove from active orders and move to history
+    let movedOrder: CustomerOrder | null = null;
+    queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("active"), (old = []) => {
+      const target = old.find((o) => (o.id || o._id) === orderId);
+      if (target) movedOrder = target;
+      return old.filter((o) => (o.id || o._id) !== orderId);
+    });
+
+    queryClient.setQueryData<CustomerOrder[]>(queryKeys.customerOrders("history"), (old = []) => {
+      const orderToInsert = fullOrder || (movedOrder ? {
+        ...movedOrder,
+        systemState: "CANCELLED",
+        currentStepKey: "cancelled",
+        cancellation: {
+          reason: data?.reason || "Cancelled by staff override",
+          cancelledAt: new Date().toISOString(),
+        },
+      } : null);
+
+      if (!orderToInsert) return old;
+      const exists = old.some((o) => (o.id || o._id) === orderId);
+      if (exists) {
+        return old.map((o) => ((o.id || o._id) === orderId ? { ...o, ...orderToInsert } : o));
+      }
+      return [orderToInsert, ...old];
+    });
+
     debouncer.queueOrder(orderId);
   }
+
   debouncer.queueActiveOrders();
   debouncer.queueHistoryOrders();
 

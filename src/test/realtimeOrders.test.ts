@@ -338,4 +338,70 @@ describe("Customer Realtime & Socket Integration", () => {
     debouncer.destroy();
     vi.useRealTimers();
   });
+
+  it("16. direct socket updates apply immediately to TanStack Query cache without waiting for debounce", () => {
+    const debouncer = new RealtimeQueryDebouncer(queryClient);
+
+    // Initial state: empty active orders
+    queryClient.setQueryData(queryKeys.customerOrders("active"), []);
+
+    const createdPayload: OrderCreatedPayload = {
+      eventId: "evt-direct-1",
+      type: "order:created",
+      data: {
+        order: {
+          id: "ord-instant-1",
+          orderNumber: "201",
+          currentStepKey: "placed",
+          systemState: "OPEN",
+        } as any,
+      },
+    };
+
+    // Process created
+    processOrderCreated(createdPayload, debouncer);
+
+    // Assert cache was updated IMMEDIATELY (before any debouncer.flush())
+    const cachedActive = queryClient.getQueryData<any[]>(queryKeys.customerOrders("active"));
+    expect(cachedActive).toHaveLength(1);
+    expect(cachedActive?.[0].id).toBe("ord-instant-1");
+
+    const cachedOrder = queryClient.getQueryData<any>(queryKeys.order("ord-instant-1"));
+    expect(cachedOrder?.currentStepKey).toBe("placed");
+
+    // Process updated (in-progress)
+    const updatedPayload: OrderUpdatedPayload = {
+      eventId: "evt-direct-2",
+      type: "order:updated",
+      data: {
+        orderId: "ord-instant-1",
+        currentStepKey: "served",
+        systemState: "IN_PROGRESS",
+      },
+    };
+
+    processOrderUpdated(updatedPayload, debouncer);
+    const cachedUpdated = queryClient.getQueryData<any>(queryKeys.order("ord-instant-1"));
+    expect(cachedUpdated?.currentStepKey).toBe("served");
+
+    // Process completed (moves from active to history)
+    const completedPayload: OrderUpdatedPayload = {
+      eventId: "evt-direct-3",
+      type: "order:updated",
+      data: {
+        orderId: "ord-instant-1",
+        currentStepKey: "completed",
+        systemState: "COMPLETED",
+      },
+    };
+
+    processOrderUpdated(completedPayload, debouncer);
+    const activeAfterComplete = queryClient.getQueryData<any[]>(queryKeys.customerOrders("active"));
+    const historyAfterComplete = queryClient.getQueryData<any[]>(queryKeys.customerOrders("history"));
+    expect(activeAfterComplete).toHaveLength(0);
+    expect(historyAfterComplete).toHaveLength(1);
+    expect(historyAfterComplete?.[0].id).toBe("ord-instant-1");
+
+    debouncer.destroy();
+  });
 });
