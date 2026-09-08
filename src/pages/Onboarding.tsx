@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { QrCode, Sparkles, Bell } from "lucide-react";
+import { Eye, EyeOff, QrCode, Sparkles, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { loyaltyStore } from "@/lib/store";
 import { registerFcmToken } from "@/hooks/useNotifications";
@@ -19,6 +19,7 @@ export default function Onboarding() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -115,6 +116,11 @@ export default function Onboarding() {
 
         {step === 1 && (
           <div className="animate-fade-in-up max-w-sm w-full">
+            <img
+              src="/images/branding/x.webp"
+              alt="Stamp logo"
+              className="mx-auto mb-5 h-20 w-20 object-contain"
+            />
             <h2 className="font-display text-4xl mb-3 leading-none">
               {isLogin ? "Welcome Back" : "Create Account"}
             </h2>
@@ -138,14 +144,24 @@ export default function Onboarding() {
                 onChange={(e) => setPhone(e.target.value)}
                 className="h-14 rounded-2xl text-lg"
               />
-              <Input
-                placeholder="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-14 rounded-2xl text-lg"
-                onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-              />
+              <div className="relative">
+                <Input
+                  placeholder="Password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 rounded-2xl pr-12 text-lg"
+                  onKeyDown={(e) => e.key === "Enter" && handleAuth()}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
 
             <Button 
