@@ -117,9 +117,9 @@ export default function Onboarding() {
         {step === 1 && (
           <div className="animate-fade-in-up max-w-sm w-full">
             <img
-              src="/images/branding/x.webp"
+              src="/images/branding/L.png"
               alt="Stamp logo"
-              className="mx-auto mb-5 h-20 w-20 object-contain"
+              className="mx-auto mb-12 h-36 w-2h-36 object-contain flex self-start "
             />
             <h2 className="font-display text-4xl mb-3 leading-none">
               {isLogin ? "Welcome Back" : "Create Account"}
