@@ -1,5 +1,6 @@
 import { Restaurant } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
+import { CardPattern } from "@/components/CardPattern";
 
 export function StampCard({
   restaurant,
@@ -51,6 +52,11 @@ export function StampCard({
         className="absolute inset-0 opacity-[0.07]"
         style={{ background: `radial-gradient(circle at 100% 0%, hsl(${restaurant.color}), transparent 60%)` }}
       />
+      {/* <CardPattern
+        cuisine={restaurant.name}
+        opacity={0.06}
+        className="text-foreground"
+      /> */}
       <div className="relative">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">

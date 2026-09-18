@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRef, useCallback, useState } from "react";
 import { MapPin, Phone, Sparkles } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import { CardPattern } from "@/components/CardPattern";
 
 interface Restaurant {
   _id: string;
@@ -97,33 +98,37 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
     >
       {/* Colored header */}
       <div
-        className="relative flex px-4 gap-2 pt-4 pb-0"
+        className="relative flex px-4 gap-2 pt-4 pb-0 overflow-hidden"
         style={{ backgroundColor: themeColor, minHeight: 140 }}
       >
+        {/* Background icon pattern */}
+        <CardPattern
+        cuisine={restaurant.name}
+        opacity={0.3}
+        className="text-foreground text-[#fffbfb]"
+      />
         {/* Circular icon */}
         <div
-          className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center mb-3"
+          className="relative z-10 w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center mb-3 shrink-0 backdrop-blur-[1px]"
         >
           <span className="text-2xl">{icon}</span>
         </div>
-          {/* Thin divider line */}
-          <div className="h-8 w-[2px] bg-white/40 my-2" />
+        {/* Thin divider line */}
+        <div className="relative z-10 h-8 w-[2px] bg-white/40 my-2 shrink-0" />
         {/* Name */}
-        <div className="mb-1 ">
+        <div className="relative z-10 mb-1 flex-1 min-w-0">
           {ownerName && (
             <p className={ownerClass}>{ownerName}</p>
           )}
           <p className={`${nameClass} font-bold leading-tight`}>{mainName}</p>
         </div>
 
-
-
         {/* Cuisine type */}
         {restaurant.cuisineType && (
-          <p className="text-[#F5C842] text-[13px] font-medium mb-3">{restaurant.cuisineType}</p>
+          <p className="relative z-10 text-[#F5C842] text-[13px] font-medium mb-3">{restaurant.cuisineType}</p>
         )}
       </div>
-
+        
       {/* Wave transition */}
       <WaveDivider color={themeColor} />
 
