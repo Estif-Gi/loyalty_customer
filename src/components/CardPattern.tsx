@@ -111,7 +111,7 @@ export const CardPattern: React.FC<CardPatternProps> = ({
               </g>
 
               {/* Center-Right Calzone / Folded Turnover */}
-              <g transform="translate(112, 92) rotate(-8) scale(0.58)">
+              <g transform="translate(112, 92) rotate(-8) scale(0.28)">
                 {/* Curved pocket */}
                 <path
                   d="M 12,48 C 12,18 42,6 74,15 C 96,22 100,45 92,60 C 78,74 44,70 12,48 Z"
@@ -279,7 +279,7 @@ export const CardPattern: React.FC<CardPatternProps> = ({
               </g>
 
               {/* Chef Hat */}
-              <g transform="translate(115, 105) rotate(-10) scale(0.6)">
+              <g transform="translate(115, 105) rotate(-10) scale(0.26)">
                 <path d="M 22,55 L 68,55 L 65,70 L 25,70 Z" strokeWidth="2.8" />
                 <path d="M 22,55 C 8,45 15,25 30,30 C 35,15 55,15 60,30 C 75,25 82,45 68,55 Z" strokeWidth="3" />
               </g>
