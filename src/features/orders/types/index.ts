@@ -34,6 +34,9 @@ export interface CustomerOrder {
   id: string;
   _id?: string;
   orderNumber: string;
+  orderSessionId?: string;
+  orderSession?: string | { _id?: string; id?: string };
+  sessionId?: string;
   restaurant: string | { _id?: string; id?: string; name?: string; location?: string; phone?: string };
   table: string | { _id?: string; id?: string; name?: string; code?: string };
   items: OrderSnapshotItem[];

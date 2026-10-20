@@ -77,13 +77,13 @@ export default function Home() {
             <p className="text-xl uppercase font-bold mb-3 flex self-start">Start earning rewards!</p>
             <div className="flex">
               <div className="flex-1 ">
-                <h2 className="text-[14px] mb-4">Scan at partner locations to collect stamps and unlock exciting rewards.</h2>
+                <h2 className="text-[14px] mb-4">Get scanned at partner locations to collect stamps and unlock exciting rewards.</h2>
                 <button
                   type="button"
-                  onClick={() => navigate("/scan")}
+                  onClick={() => navigate("/scan?showMyCode=true")}
                   className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90"
                 >
-                  Scan Now
+                  Get Scanned Now
                 </button>
               </div>
 
@@ -91,7 +91,7 @@ export default function Home() {
               <div className="flex-1 max-w-sm ">
                 <img
                   src="/images/ordering/home-hero.webp"
-                  alt="Scan now"
+                  alt="Get scanned now"
                   className="w-full rounded-[2rem] object-cover"
                 />
               </div>

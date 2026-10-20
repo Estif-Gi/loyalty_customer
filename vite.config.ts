@@ -24,8 +24,22 @@ export default defineConfig(({ mode }) => ({
       "react-dom",
       "react/jsx-runtime",
       "react/jsx-dev-runtime",
+      "react-router-dom",
+      "react-router",
       "@tanstack/react-query",
       "@tanstack/query-core",
+    ],
+  },
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "react-router",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+      "zustand",
+      "lucide-react",
     ],
   },
   build: {

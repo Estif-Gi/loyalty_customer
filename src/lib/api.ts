@@ -62,9 +62,13 @@ export async function fetchApi<T = any>(endpoint: string, options: ApiOptions = 
 
   // Handle 401 Unauthorized
   if (response.status === 401 && !skipAuth) {
+    // If an authenticated request receives 401, the token is expired/invalid; clear auth state
+    if (token) {
+      loyaltyStore.getState().logout();
+    }
+
     // Invalid or expired token
     const errorData: ApiErrorResponse | null = await response.json().catch(() => null);
-    // Don't auto-logout if it's a specific route check, but allow clearing auth when required
     throw new ApiError(
       401,
       errorData?.message || "Session expired. Please log in again.",

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Html5Qrcode , Html5QrcodeScannerState} from "html5-qrcode";
 import { ArrowLeft, Sparkles, QrCode as QrCodeIcon, X, Camera } from "lucide-react";
@@ -13,13 +13,16 @@ import { toast } from "sonner";
 
 export default function Scan() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const elId = "qr-reader";
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pulse, setPulse] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [showMyCode, setShowMyCode] = useState(false);
+  const [showMyCode, setShowMyCode] = useState(
+    () => searchParams.get("showMyCode") === "true"
+  );
   const handledRef = useRef(false);
 
   const { data: profile } = useQuery({
@@ -169,7 +172,7 @@ export default function Scan() {
           </button>
 
           <div className="flex-1 text-center px-3 py-2 rounded-full border border-white/15 bg-black/40 backdrop-blur-md text-xs sm:text-sm font-medium shadow-soft truncate">
-            Point at a Stamp QR
+            Point at a Table QR
           </div>
 
           <button
@@ -233,7 +236,7 @@ export default function Scan() {
             </div>
             <div className="text-center">
               <p className="text-gray-800 font-bold text-base tracking-wide leading-none">Tap to Scan</p>
-              <p className="text-gray-400 text-xs mt-1.5 font-medium">Point at a stamp QR code</p>
+              <p className="text-gray-400 text-xs mt-1.5 font-medium">Point at a Table QR code</p>
             </div>
           </button>
         ) : (
@@ -277,7 +280,16 @@ export default function Scan() {
         <div className="absolute inset-0 z-[60] bg-black/85 backdrop-blur-xl text-white flex flex-col items-center justify-center p-6 pb-28 animate-in fade-in duration-300">
           <div className="absolute top-0 inset-x-0 safe-top p-4 flex justify-end items-center">
             <button
-              onClick={() => setShowMyCode(false)}
+              onClick={() => {
+                setShowMyCode(false);
+                setSearchParams(
+                  (params) => {
+                    params.delete("showMyCode");
+                    return params;
+                  },
+                  { replace: true }
+                );
+              }}
               className="bg-black/50 border border-white/15 h-11 w-11 rounded-full backdrop-blur transition-colors flex items-center justify-center tap-scale"
             >
               <X className="h-5 w-5 text-white" />
@@ -287,14 +299,17 @@ export default function Scan() {
           <div className="bg-white p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(255,255,255,0.15)] border border-white/80 flex flex-col items-center max-w-[340px] w-full mx-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
             <div className="bg-white p-2 rounded-2xl border-2 border-gray-100 mb-6 shadow-sm w-full aspect-square flex items-center justify-center">
               <QRCode
-                value={JSON.stringify({ customerId: profile._id, name: profile.name })}
+                value={JSON.stringify({
+                  customerId: profile.id || profile._id,
+                  name: profile.name,
+                })}
                 size={240}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
               />
             </div>
             <h3 className="font-display text-3xl text-gray-900 leading-none mb-2 text-center">{profile.name}</h3>
             <p className="text-gray-500 text-center font-medium leading-tight">
-              Show this code to the cashier
+              Show this code to the waiter
               <br />
               to collect your stamps
             </p>

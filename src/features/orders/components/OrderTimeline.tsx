@@ -10,7 +10,7 @@ interface OrderTimelineProps {
 export const OrderTimeline: React.FC<OrderTimelineProps> = ({ order }) => {
   const steps = [
     { key: "placed", label: "Order Placed", desc: "Order received and assigned to your table." },
-    { key: "serving", label: "Served", desc: "Delivered to your table." },
+    { key: "served", label: "Served", desc: "Delivered to your table." },
     { key: "completed", label: "Completed", desc: "Order finished." },
   ];
 

@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut, RotateCcw, Smartphone } from "lucide-react";
+import { Bell, LogOut, RotateCcw, Smartphone, Receipt, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { loyaltyStore } from "@/lib/store";
 import { disconnectSocket } from "@/lib/socket";
+import { useCustomerOrders } from "@/features/orders/hooks/useCustomerOrders";
+import { useActiveOrderSession } from "@/features/order-session/hooks/useActiveOrderSession";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -15,6 +17,9 @@ export default function Profile() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
   const profile = loyaltyStore((state) => state.user);
+  const { hasActiveSession } = useActiveOrderSession();
+  const { orders: activeOrders } = useCustomerOrders("active");
+  const hasActiveOrders = activeOrders.length > 0;
 
   useEffect(() => {
     const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
@@ -75,6 +80,20 @@ export default function Profile() {
       </div>
 
       <div className="space-y-2 mb-6">
+        <Row
+          icon={<Receipt className="h-5 w-5" />}
+          title="Order History"
+          desc={hasActiveOrders ? "You have an active table order in progress" : "View active orders & past receipts"}
+          onClick={() => navigate(hasActiveOrders ? "/order/history?tab=active" : "/order/history")}
+          badge={
+            hasActiveOrders ? (
+              <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Active
+              </span>
+            ) : undefined
+          }
+        />
         <Row icon={<Smartphone className="h-5 w-5" />} title="Install App" desc="Add Stamp to your home screen" onClick={installApp} />
         <Row icon={<Bell className="h-5 w-5" />} title="Notifications" desc="Get reward nudges" onClick={requestNotifications} />
       </div>
@@ -98,20 +117,42 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 function Row({
-  icon, title, desc, onClick, variant,
-}: { icon: React.ReactNode; title: string; desc: string; onClick: () => void; variant?: "destructive" }) {
+  icon,
+  title,
+  desc,
+  onClick,
+  variant,
+  badge,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  onClick: () => void;
+  variant?: "destructive";
+  badge?: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left bg-card border border-border rounded-2xl p-4 flex items-center gap-3 tap-scale shadow-soft"
+      className="w-full text-left bg-card border border-border rounded-2xl p-4 flex items-center gap-3 tap-scale shadow-soft group transition-all"
     >
-      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${variant === "destructive" ? "bg-destructive/10 text-destructive" : "bg-secondary text-foreground"}`}>
+      <div
+        className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          variant === "destructive"
+            ? "bg-destructive/10 text-destructive"
+            : "bg-secondary text-foreground group-hover:text-primary transition-colors"
+        }`}
+      >
         {icon}
       </div>
-      <div className="flex-1">
-        <p className={`font-semibold leading-tight ${variant === "destructive" ? "text-destructive" : ""}`}>{title}</p>
-        <p className="text-xs text-muted-foreground">{desc}</p>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className={`font-semibold leading-tight ${variant === "destructive" ? "text-destructive" : ""}`}>{title}</p>
+          {badge}
+        </div>
+        <p className="text-xs text-muted-foreground truncate">{desc}</p>
       </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-foreground transition-colors shrink-0" />
     </button>
   );
 }

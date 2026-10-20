@@ -5,6 +5,7 @@ import { AppProviders } from "@/app/providers/AppProviders";
 import { AuthProvider } from "@/features/auth/components/AuthContext";
 import { CustomerRealtimeManager } from "@/realtime/CustomerRealtimeManager";
 import { PageLoading } from "@/components/feedback/PageLoading";
+import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
 import { useAuthStore } from "@/features/auth/store/authStore";
 
 // Existing routes
@@ -38,32 +39,34 @@ const App = () => {
     <AppProviders>
       <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <AuthProvider>
-          <CustomerRealtimeManager />
-          <Suspense fallback={<PageLoading message="Loading..." />}>
-            <Routes>
-              <Route element={<AppShell />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/scan" element={<Scan />} />
-                <Route path="/restaurants" element={<Restaurants />} />
-                <Route path="/restaurant/:id" element={<RestaurantDetail />} />
-                <Route path="/menu/:id" element={<MenuView />} />
-                <Route path="/rewards" element={<Rewards />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/programDetail/:id" element={<ProgramDetail />} />
+          <ErrorBoundary>
+            <CustomerRealtimeManager />
+            <Suspense fallback={<PageLoading message="Loading..." />}>
+              <Routes>
+                <Route element={<AppShell />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/scan" element={<Scan />} />
+                  <Route path="/restaurants" element={<Restaurants />} />
+                  <Route path="/restaurant/:id" element={<RestaurantDetail />} />
+                  <Route path="/menu/:id" element={<MenuView />} />
+                  <Route path="/rewards" element={<Rewards />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/programDetail/:id" element={<ProgramDetail />} />
 
-                {/* Ordering Flow Routes */}
-                <Route path="/order/start" element={<OrderStart />} />
-                <Route path="/order/menu" element={<OrderMenu />} />
-                <Route path="/order/cart" element={<OrderCart />} />
-                <Route path="/order/success/:orderId" element={<OrderSuccess />} />
-                <Route path="/order/history" element={<OrderHistory />} />
+                  {/* Ordering Flow Routes */}
+                  <Route path="/order/start" element={<OrderStart />} />
+                  <Route path="/order/menu" element={<OrderMenu />} />
+                  <Route path="/order/cart" element={<OrderCart />} />
+                  <Route path="/order/success/:orderId" element={<OrderSuccess />} />
+                  <Route path="/order/history" element={<OrderHistory />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </Suspense>
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </AppProviders>

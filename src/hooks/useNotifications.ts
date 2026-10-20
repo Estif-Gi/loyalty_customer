@@ -10,11 +10,14 @@ const API_URL = import.meta.env.VITE_API_URL as string;
  * Silently no-ops if the user is not authenticated.
  */
 async function registerTokenWithBackend(token: string): Promise<void> {
-  const authToken = localStorage.getItem("token");
+  const authToken =
+    typeof window !== "undefined"
+      ? localStorage.getItem("token") || localStorage.getItem("accessToken")
+      : null;
   if (!authToken) return; // unauthenticated – skip
 
   try {
-    await fetch(`${API_URL}/users/fcm-token`, {
+    const res = await fetch(`${API_URL}/users/fcm-token`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -22,6 +25,10 @@ async function registerTokenWithBackend(token: string): Promise<void> {
       },
       body: JSON.stringify({ fcmToken: token }),
     });
+    if (res.status === 401) {
+      console.warn("[Notifications] 401 Unauthorized registering FCM token");
+      return;
+    }
     console.log("[Notifications] FCM token registered with backend ✓");
   } catch (err) {
     console.warn("[Notifications] Failed to register FCM token with backend:", err);
