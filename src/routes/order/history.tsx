@@ -612,8 +612,8 @@ export default function OrderHistoryPage() {
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               {isMultiOrder ? (
-                                <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-lg">
-                                  Round {orderIdx + 1}
+                                <span className="text-lg font-bold border-2 border-amber-800 border-dashed text-primary bg-primary/10 px-2.5 py-0.5 rounded-lg">
+                                   {orderIdx + 1}
                                 </span>
                               ) : null}
                               <span className="text-sm font-bold text-foreground">
