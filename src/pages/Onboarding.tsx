@@ -180,12 +180,12 @@ export default function Onboarding() {
               {isLogin ? (
                 <>
                   Don't have an account?{" "}
-                  <span className="font-extrabold text-xl text-primary">Sign up</span>
+                  <span className="font-extrabold text-lg text-primary">Sign up</span>
                 </>
               ) : (
                 <>
                   Already have an account?{" "}
-                  <span className="font-extrabold text-xl text-primary">Log in</span>
+                  <span className="font-extrabold text-lg text-primary">Log in</span>
                 </>
               )}
             </button>
