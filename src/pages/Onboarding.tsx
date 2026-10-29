@@ -177,7 +177,17 @@ export default function Onboarding() {
               onClick={() => setIsLogin(!isLogin)} 
               className="text-muted-foreground text-sm mt-4 underline-offset-4 hover:underline"
             >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+              {isLogin ? (
+                <>
+                  Don't have an account?{" "}
+                  <span className="font-extrabold text-xl text-primary">Sign up</span>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <span className="font-extrabold text-xl text-primary">Log in</span>
+                </>
+              )}
             </button>
             <br />
             <button 
@@ -206,4 +216,3 @@ function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; 
     </div>
   );
 }
-

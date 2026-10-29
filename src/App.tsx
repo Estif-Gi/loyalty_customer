@@ -7,6 +7,7 @@ import { CustomerRealtimeManager } from "@/realtime/CustomerRealtimeManager";
 import { PageLoading } from "@/components/feedback/PageLoading";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 
 // Existing routes
 const Index = lazy(() => import("./pages/Index"));
@@ -68,6 +69,7 @@ const App = () => {
             </Suspense>
           </ErrorBoundary>
         </AuthProvider>
+        <PWAInstallBanner />
       </BrowserRouter>
     </AppProviders>
   );
